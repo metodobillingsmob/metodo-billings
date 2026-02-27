@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOB - Sistema Completo - Mirelly Santos</title>
+    
+    <!-- SDKs do Firebase (Backend) -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <style>
+        .view-content { display: none; }
+        .view-content.active { display: block; }
+        .selo-grid-item { cursor: pointer; border: 2px solid transparent; }
+        
+        /* ===============================
+        MENU INFERIOR - ESTADO ATIVO
+        =============================== */
+        .nav-btn {
+            color: #9ca3af; /* cinza */
+        }
+
+        .nav-btn.active {
+            color: #2563eb; /* azul */
+        }
+
+
+/* Gotas menores (para múltiplas gotas) */
+.gota.pequena {
+    width: 8px;
+    height: 11px;
+}
+
+.gota.pequena::before {
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 5px solid white;
+}
+
+.fa-baby {
+    line-height: 1;
+}
+
+.selo-grid-item .fa-baby {
+    margin-bottom: 2px;
+}
+
+
+/* ===============================
+   BASE — PC + MOBILE (visualização)
+=============================== */
+
+.tabela-wrapper {
+    width: 100%;
+    overflow-x: auto; /* scroll horizontal no mobile */
+}
+
+.tabela-ciclo {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: max-content; /* cresce conforme número de colunas */
+}
+
+.grade-pdf-cell {
+    min-width: 28px;
+    height: 36px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.col-label {
+    width: 64px;
+    min-width: 64px;
+    font-weight: bold;
+    background-color: #f9fafb;
+    text-align: left;
+    padding-left: 6px;
+}
+
+/* ===============================
+   DESKTOP — telas largas
+=============================== */
+@media (min-width: 1200px) {
+    .tabela-ciclo {
+        width: 100%; /* ocupa exatamente o container */
+    }
+
+    .tabela-ciclo .grade-pdf-cell:not(.col-label) {
+        width: calc((100% - 64px) / 38); /* 38 colunas exatas */
+        min-width: unset;
+    }
+}
+
+/* ===============================
+   DATA — texto vertical
+=============================== */
+.data-cell span {
+    display: inline-block;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 9px;
+    line-height: 1;
+}
+
+/* ===============================
+   PRINT / PDF — CORREÇÃO DEFINITIVA
+=============================== */
+@media print {
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+
+    body {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* ❌ REMOVE TODO O LAYOUT DO APP */
+    header,
+    nav,
+    #view-anotar,
+    #view-calendario,
+    #view-lista,
+    #view-grafico {
+        display: none !important;
+    }
+
+    /* 🔥 QUEBRA O CONTAINER CENTRAL */
+    main {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #view-tabela,
+    #tabelas-ciclos {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 🔒 TABELA COMEÇA NA ESQUERDA REAL */
+    .tabela-wrapper {
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .tabela-ciclo {
+        width: auto !important;
+        margin-left: 0 !important;
+        table-layout: fixed !important;
+    }
+
+    .grade-pdf-cell {
+        width: 28px !important;
+    }
+
+    .col-label {
+        width: 64px !important;
+    }
+
+    .ciclo-print {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        page-break-after: always;
+    }
+
+    .ciclo-print:last-child {
+        page-break-after: auto;
+    }
+}
+
+
+</style>
+
+
+    <style>
+        .view-content { display: none; }
+        .view-content.active { display: block; }
+        .selo-grid-item { cursor: pointer; border: 2px solid transparent; transition: 0.2s; height: 50px; width: 35px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; flex-shrink: 0; }
+        .selo-grid-item.selected { border-color: #2563eb; transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        /* Cores Oficiais MOB */
+        .bg-red { background-color: #ff0000; color: white; }
+        .bg-pink { background-color: #ffffff; color: white; border: 1px solid #ddd; }
+        .bg-yellow { background-color: #ffff00; color: black; }
+        .bg-green { background-color: #008000; color: white; }
+        .bg-white { background-color: #ffffff; color: black; border: 1px solid #ddd; }
+        .bg-gray { background-color: #a09090; color: black; border: 1px solid #ddd; }
+        
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .tab-active { color: #2563eb; border-bottom: 2px solid #2563eb; }
+        
+        /* Estilo Tabela PDF */
+        .grade-pdf-cell { width: 40px; border: 1px solid #e5e7eb; text-align: center; font-size: 10px; }
+
+        /* Estilo do campo de observação conforme imagem */
+        .input-obs { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; color: #718096; resize: none; outline: none; }
+    </style>
+</head>
+<body class="bg-gray-50 pb-24">
+
+    <!-- Header -->
+    <header class="bg-white p-4 shadow-sm sticky top-0 z-50">
+        <div class="flex justify-between items-center max-w-4xl mx-auto">
+            <div>
+                <h1 class="text-xl font-bold text-blue-900">Anotações</h1>
+                <p class="text-xs text-gray-500">Mirelly Santos • <span id="sync-status" class="text-red-400">Desconectado</span></p>
+            </div>
+            <div class="text-blue-600 flex gap-4 items-center">
+                <!-- ⬇️ BACKUP -->
+                <i class="fas fa-cloud-download-alt text-xl cursor-pointer"
+                title="Baixar backup"
+                onclick="exportarBanco()"></i>
+
+                <!-- ⬆️ RESTAURAR -->
+                <i class="fas fa-cloud-upload-alt text-xl cursor-pointer"
+                title="Restaurar backup"
+                onclick="importarBanco()"></i>
+
+                <!-- 🖨️ IMPRIMIR -->
+                <i class="fas fa-print text-xl cursor-pointer"
+                title="Imprimir / Salvar PDF"
+                onclick="window.print()"></i>
+
+                <!-- já existentes -->
+                <i class="fas fa-sync-alt text-xl" title="Recarregar" onclick="location.reload()"></i>
+                <i class="fas fa-plus-circle text-xl cursor-pointer" title="Iniciar novo ciclo" onclick="iniciarNovoCiclo()"></i>
+                <i class="fas fa-trash-alt text-xl cursor-pointer text-red-500" title="Apagar todas as anotações" onclick="confirmarApagarTudo()"></i>
+            </div>       
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4">
+
+        <!-- 1. TELA DE ANOTAÇÃO (NOVA ANOTAÇÃO) -->
+        <section id="view-anotar" class="view-content active space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">Dia do Ciclo</label>
+                        <input type="number" id="f-dia" value="1" class="w-full p-2 border-b text-lg font-bold outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex-[2]">
+                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">Data</label>
+                        <input type="date" id="f-data" class="w-full p-2 border-b text-lg outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-2">O QUE EU SINTO</label>
+                        <select id="f-sinto" onchange="sugerirSelo()" class="w-full p-3 bg-gray-50 rounded-xl border-none ring-1 ring-gray-200">
+                            <option value="">Selecione...</option><option>Seca</option><option>Úmida</option><option>Molhada</option><option>Escorregadia</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-2">O QUE EU VEJO</label>
+                        <select id="f-vejo" onchange="sugerirSelo()" class="w-full p-3 bg-gray-50 rounded-xl border-none ring-1 ring-gray-200">
+                            <option value="">Selecione...</option><option>Pegajoso</option><option>Pastoso</option><option>Cremoso</option><option>Gel</option><option>Clara de ovo</option><option>Sangue</option><option>Mancha</option>
+                        </select>
+                    </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 mb-2">
+                                TIPO DE REGRA
+                            </label>
+                            <select id="f-regra"
+                                class="w-full p-3 bg-gray-50 rounded-xl border-none ring-1 ring-gray-200">
+                                <option value="">Não informada</option>
+                                <option value="1">Regra 1</option>
+                                <option value="2">Regra 2</option>
+                                <option value="3">Regra 3</option>
+                            </select>
+                        </div>
+
+                    <div class="flex items-center gap-4 bg-gray-50 p-3 rounded-xl ring-1 ring-gray-200">
+                        <i class="fas fa-thermometer-half text-red-500"></i>
+                        <input type="number" id="f-temp" step="0.1" placeholder="Temperatura Corporal (ex: 36.5)" class="bg-transparent w-full outline-none">
+                    </div>
+
+                    <!-- GRADE DE SELOS COMPLETA -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-3 uppercase">Selecione o Selo / Símbolo</label>
+                        <div class="flex overflow-x-auto gap-2 p-2 hide-scroll bg-gray-50 rounded-xl border border-dashed border-gray-300" id="selo-picker"></div>
+                    </div>
+
+                    <!-- Ato Conjugal -->
+                    <div class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100">
+                        <span class="text-red-800 font-medium">Ato Conjugal (Relação)</span>
+                        <button onclick="toggleRelacao()" id="btn-relacao" class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow text-gray-300">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- NOVO CAMPO DE OBSERVAÇÕES -->
+                    <div>
+                        <textarea id="f-obs" class="input-obs" placeholder="Observações (Medicação, Stress, etc)" rows="3"></textarea>
+                    </div>
+
+                    <button id="btn-salvar"class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-200">Salvar no Diário</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. VISUALIZAÇÃO CALENDÁRIO -->
+        <section id="view-calendario" class="view-content">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border">
+                <div class="flex justify-between items-center mb-4">
+                    <i class="fas fa-chevron-left text-blue-500" onclick="mudarMes(-1)"></i>
+                    <h2 id="calendar-title" class="font-bold text-gray-700 uppercase"></h2>
+                    <i class="fas fa-chevron-right text-blue-500" onclick="mudarMes(1)"></i>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-gray-400 mb-2">
+                    <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+            </div>
+        </section>
+
+        <!-- 3. VISUALIZAÇÃO LISTA -->
+        <section id="view-lista" class="view-content space-y-3">
+            <div id="lista-container"></div>
+        </section>
+
+        <!-- 4. VISUALIZAÇÃO TABELA -->
+        <section id="view-tabela" class="view-content">
+            <div id="tabelas-ciclos" class="space-y-10"></div>
+        </section>
+
+        <!-- 5. VISUALIZAÇÃO GRÁFICO -->
+        <section id="view-grafico" class="view-content">
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+
+                <!-- 🔽 FILTRO POR CICLO -->
+                <div class="mb-3">
+                    <label class="block text-xs font-bold text-gray-400 mb-1">
+                        FILTRAR POR CICLO
+                    </label>
+
+                    <select
+                        id="filtro-ciclo"
+                        class="w-full p-2 rounded-lg border ring-1 ring-gray-200 text-sm"
+                        onchange="renderGrafico()"
+                    >
+                        <option value="all">Todos os ciclos</option>
+                    </select>
+                </div>
+
+                <!-- 📈 GRÁFICO -->
+                <canvas id="tempChart"></canvas>
+            </div>
+        </section>
+
+    </main>
+
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 z-50">
+    <button data-tab="view-anotar" onclick="changeTab('view-anotar')" class="nav-btn flex flex-col items-center">
+        <i class="fas fa-edit"></i>
+        <span class="text-[10px]">Anotar</span>
+    </button>
+
+    <button data-tab="view-calendario" onclick="changeTab('view-calendario')" class="nav-btn flex flex-col items-center">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="text-[10px]">Calendário</span>
+    </button>
+
+    <button data-tab="view-lista" onclick="changeTab('view-lista')" class="nav-btn flex flex-col items-center">
+        <i class="fas fa-list"></i>
+        <span class="text-[10px]">Lista</span>
+    </button>
+
+    <button data-tab="view-tabela" onclick="changeTab('view-tabela')" class="nav-btn flex flex-col items-center">
+        <i class="fas fa-th"></i>
+        <span class="text-[10px]">Tabela</span>
+    </button>
+
+    <button data-tab="view-grafico" onclick="changeTab('view-grafico')" class="nav-btn flex flex-col items-center">
+        <i class="fas fa-chart-line"></i>
+        <span class="text-[10px]">Gráfico</span>
+    </button>
+
+    
+</nav>
+
+
+    <script>
+        // CONFIGURAÇÃO FIREBASE (Backend)
+        const firebaseConfig = {
+        apiKey: "AIzaSyBPRK62-uOtB-vkOKeYLIIkeMmf7TJbkv4",
+        authDomain: "metodo-billings.firebaseapp.com",
+        projectId: "metodo-billings",
+        storageBucket: "metodo-billings.firebasestorage.app",
+        messagingSenderId: "680467226445",
+        appId: "1:680467226445:web:dd7c70fc408d03972d2104"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const casalID = "mirelly_santos"; // Grupo para marido e mulher
+
+        let anotacoes = [];
+        let relacaoAtiva = false;
+        let seloSelecionado = null;
+        let salvando = false;
+        let mesAtual = new Date().getMonth(); // 0 = Janeiro
+        let anoAtual = new Date().getFullYear();
+        let dataInicioCiclo = null;
+        let unsubscribeUpdates = null;
+        let cicloAtualId = 1;
+        let ciclos = [];
+        let anotacaoEmEdicaoId = null;
+        let cicloAtualTipo = 'normal';
+
+        const selosDisponiveis = [
+            // 🔴 Sangramento
+            { id: 'r1', class: 'bg-red', txt: '' },
+            { id: 'r2', class: 'bg-red', droplet: 'half' },
+
+            // 🟨 Infertilidade
+            { id: 'y0', class: 'bg-yellow', txt: '' },
+            { id: 'y1', class: 'bg-yellow', txt: '1' },
+            { id: 'y2', class: 'bg-yellow', txt: '2' },
+            { id: 'y3', class: 'bg-yellow', txt: '3' },
+
+            // ⬜ Observações
+            { id: 'w_obs', class: 'bg-white', icon: 'fa-baby' },          // observação interna
+            { id: 'w_star', class: 'bg-pink', icon: 'fa-star' },
+            { id: 'w_none', class: 'bg-white', txt: '' },                 // sem observação
+            { id: 't_only', class: 'bg-gray', icon: 'fa-thermometer-half' }, // só temperatura
+
+            // 🟩 Fertilidade
+            { id: 'g0', class: 'bg-green', txt: '' },
+            { id: 'g1', class: 'bg-green', txt: '1' },
+            { id: 'g2', class: 'bg-green', txt: '2' },
+            { id: 'g3', class: 'bg-green', txt: '3' }
+        ];
+
+function renderConteudoSelo(s) {
+    if (!s) return '';
+
+    // 🔴 Sangramento intenso → 3 gotas
+    if (s.id === 'r1') {
+        return `
+            <div class="grid grid-cols-2 gap-x-1 gap-y-0 justify-items-center">
+                <i class="fa-solid fa-droplet text-white text-[11px]"></i>
+                <i class="fa-solid fa-droplet text-white text-[11px]"></i>
+                <i class="fa-solid fa-droplet text-white text-[11px] col-span-2"></i>
+            </div>
+        `;
+    }
+
+    // 🔴 Sangramento leve → 1 gota
+    if (s.id === 'r2') {
+        return `
+            <div class="flex items-center justify-center">
+                <i class="fa-solid fa-droplet text-white text-[12px]"></i>
+            </div>
+        `;
+    }
+
+    // 👶 Selo apenas com bebê (observação interna)
+    if (s.id === 'w_obs') {
+        return `
+            <i class="fas fa-baby text-black text-[18px]"></i>
+        `;
+    }
+
+    // 👶❌ Selo bebê + X
+    if (s.id === 'w_star') {
+        return `
+            <div class="flex flex-col items-center justify-center leading-none">
+                <i class="fas fa-baby text-black text-[18px]"></i>
+                <span class="text-[22px] text-gray-700 font-bold -mt-0.5">×</span>
+            </div>
+        `;
+    }
+
+    // 🌡️ outros ícones simples (temperatura, etc.)
+    if (s.icon) {
+        const tamanhoIcone = '18px'; 
+        return `<i class="fas ${s.icon} text-[${tamanhoIcone}]"></i>`;
+    }
+
+    // 🔢 Texto (selos numéricos)
+    return s.txt || '';
+}
+
+
+        function initSeloPicker() {
+            const container = document.getElementById('selo-picker');
+            if (!container) return;
+            container.innerHTML = '';
+
+
+            // 🔖 Legendas oficiais dos selos (Billings)
+            const legendaSelos = {
+                r1: 'Sangramento',
+                r2: 'Sangramento leve',
+
+                y0: 'Infertilidade - seca',
+                y1: 'Muco espesso (infértil)',
+                y2: 'Muco em mudança',
+                y3: 'Final do padrão infértil',
+
+                w_obs: 'Observação interna (sem muco visível)',
+                w_none: 'Sem observação',
+                w_star: 'Dia do Ápice',
+
+                t_only: 'Registro apenas de temperatura basal',
+
+                g0: 'Início da fertilidade',
+                g1: 'Muco fértil',
+                g2: 'Fertilidade elevada',
+                g3: 'Máxima fertilidade (possível Ápice)'
+            };
+
+selosDisponiveis.forEach(s => {
+    const div = document.createElement('div');
+    div.className = `selo-grid-item ${s.class}`;
+
+    // 🔥 AQUI É O PONTO CRÍTICO
+    div.innerHTML = renderConteudoSelo(s);
+
+    div.title = legendaSelos[s.id] || '';
+
+    div.onclick = () => {
+        document
+            .querySelectorAll('.selo-grid-item')
+            .forEach(i => i.classList.remove('selected'));
+
+        div.classList.add('selected');
+        seloSelecionado = s;
+    };
+
+    container.appendChild(div);
+});
+
+
+        }
+
+
+        function toggleRelacao() {
+            relacaoAtiva = !relacaoAtiva;
+            document.getElementById('btn-relacao').className = relacaoAtiva 
+                ? "w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shadow text-white" 
+                : "w-10 h-10 rounded-full bg-white flex items-center justify-center shadow text-gray-300";
+        }
+
+        // SALVAR NO FIRESTORE
+async function salvar() {
+    const btn = document.getElementById('btn-salvar');
+    if (salvando) return;
+
+    if (!seloSelecionado) {
+        alert("Selecione um selo!");
+        return;
+    }
+
+    const diaInput = parseInt(document.getElementById('f-dia').value);
+
+    salvando = true;
+    btn.disabled = true;
+    btn.textContent = "Sincronizando...";
+
+    try {
+        const anotacoesDoCiclo = anotacoes.filter(
+            a => a.cicloId === cicloAtualId
+        );
+
+        /* ==========================
+           DEFINE TIPO DO CICLO
+        ========================== */
+        if (anotacoesDoCiclo.length === 0) {
+            const tipo = prompt(
+                "Tipo de ciclo:\n\n" +
+                "1 - Normal\n" +
+                "2 - Pós-parto\n" +
+                "3 - Amamentação\n" +
+                "4 - Especial",
+                "1"
+            );
+
+            const mapaTipos = {
+                '1': 'normal',
+                '2': 'pos-parto',
+                '3': 'amamentacao',
+                '4': 'especial'
+            };
+
+            if (!mapaTipos[tipo]) {
+                salvando = false;
+                btn.disabled = false;
+                btn.textContent = "Salvar no Diário";
+                return;
+            }
+
+            cicloAtualTipo = mapaTipos[tipo];
+        } else {
+            cicloAtualTipo = obterTipoDoCiclo(cicloAtualId);
+        }
+
+        /* ==========================
+           🔒 TRAVA CICLO NORMAL
+        ========================== */
+        if (cicloAtualTipo === 'normal' && diaInput > 38) {
+            const ok = confirm(
+                "Ciclos normais possuem no máximo 38 dias.\n\n" +
+                "Deseja iniciar um novo ciclo?"
+            );
+
+            if (!ok) {
+                salvando = false;
+                btn.disabled = false;
+                btn.textContent = "Salvar no Diário";
+                return; // ❌ NÃO SALVA
+            }
+
+            iniciarNovoCiclo();
+            salvando = false;
+            btn.disabled = false;
+            btn.textContent = "Salvar no Diário";
+            return;
+        }
+
+        /* ==========================
+           MONTA PAYLOAD
+        ========================== */
+        const payload = {
+            cicloId: cicloAtualId,
+            diaCiclo: diaInput,
+            tipoCiclo: diaInput === 1 ? cicloAtualTipo : null,
+            data: document.getElementById('f-data').value,
+            sinto: document.getElementById('f-sinto').value,
+            vejo: document.getElementById('f-vejo').value,
+            regra: document.getElementById('f-regra').value || null,
+            temp: document.getElementById('f-temp').value || null,
+            obs: document.getElementById('f-obs').value || '',
+            selo: seloSelecionado,
+            relacao: relacaoAtiva,
+            atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        /* ==========================
+           GARANTE 1 DIA POR CICLO
+        ========================== */
+        const duplicadas = anotacoes.filter(a =>
+            a.cicloId === cicloAtualId &&
+            parseInt(a.diaCiclo) === diaInput &&
+            a.id !== anotacaoEmEdicaoId
+        );
+
+        for (const dup of duplicadas) {
+            await db
+                .collection('casais')
+                .doc(casalID)
+                .collection('anotacoes')
+                .doc(dup.id)
+                .delete();
+        }
+
+        /* ==========================
+           SALVA
+        ========================== */
+        if (anotacaoEmEdicaoId) {
+            await db
+                .collection('casais')
+                .doc(casalID)
+                .collection('anotacoes')
+                .doc(anotacaoEmEdicaoId)
+                .update(payload);
+
+            anotacaoEmEdicaoId = null;
+        } else {
+            await db
+                .collection('casais')
+                .doc(casalID)
+                .collection('anotacoes')
+                .add(payload);
+        }
+
+        limparForm();
+
+    } catch (e) {
+        console.error("❌ Erro ao salvar:", e);
+        alert("Erro ao salvar");
+    }
+
+    salvando = false;
+    btn.disabled = false;
+    btn.textContent = "Salvar no Diário";
+}
+
+
+
+function changeTab(tabId) {
+    // Esconde todas as views
+    document.querySelectorAll('.view-content')
+        .forEach(v => v.classList.remove('active'));
+
+    // Mostra a view correta
+    document.getElementById(tabId).classList.add('active');
+
+    // Menu inferior
+    document.querySelectorAll('.nav-btn')
+        .forEach(b => b.classList.remove('active'));
+
+    const btnAtivo = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+    if (btnAtivo) btnAtivo.classList.add('active');
+
+    // 🔥 LIMPA CONTEÚDOS QUE NÃO DEVEM VAZAR
+    if (tabId !== 'view-tabela') {
+        const t = document.getElementById('tabelas-ciclos');
+        if (t) t.innerHTML = '';
+    }
+
+    if (tabId !== 'view-lista') {
+        const l = document.getElementById('lista-container');
+        if (l) l.innerHTML = '';
+    }
+
+    // Renderizações corretas
+    if (tabId === 'view-anotar') initSeloPicker();
+    if (tabId === 'view-calendario') renderCalendario();
+    if (tabId === 'view-lista') renderLista();
+    if (tabId === 'view-tabela') renderTabela();
+    if (tabId === 'view-grafico') renderGrafico();
+}
+
+
+        // Funções de renderização originais mantidas
+function renderCalendario() {
+    const grid = document.getElementById('calendar-grid');
+    if (!grid) return;
+
+    // 🔹 Atualiza título do calendário (mês / ano)
+    const titulo = document.getElementById('calendar-title');
+    if (titulo) {
+        const nomeMes = new Date(anoAtual, mesAtual)
+            .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        titulo.innerText = nomeMes;
+    }
+
+    grid.innerHTML = "";
+
+    // 🔹 Datas base do mês atual
+    const primeiroDiaMes = new Date(anoAtual, mesAtual, 1);
+    const ultimoDiaMes   = new Date(anoAtual, mesAtual + 1, 0);
+    const totalDias      = ultimoDiaMes.getDate();
+
+    // 🔥 Dia da semana do dia 1 (0 = DOM, 1 = SEG, ...)
+    const inicioSemana = primeiroDiaMes.getDay();
+
+    // 🔹 Espaços vazios antes do dia 1
+    for (let i = 0; i < inicioSemana; i++) {
+        grid.innerHTML += `<div class="h-14"></div>`;
+    }
+
+    // 🔹 Lógica clínica
+    const diaApice = detectarApice(anotacoes);
+    const posOvulatorio = calcularPosOvulatorio(anotacoes);
+
+    // 🔹 Loop real dos dias do mês
+    for (let dia = 1; dia <= totalDias; dia++) {
+
+        // Busca anotação pela DATA real
+        const anot = anotacoes.find(a => {
+            if (!a.data) return false;
+            const d = parseDataLocal(a.data);
+            return (
+                d.getDate() === dia &&
+                d.getMonth() === mesAtual &&
+                d.getFullYear() === anoAtual
+            );
+        });
+
+        const dPlus = posOvulatorio[dia];
+
+        let content = `
+            <div class="h-14 border rounded-xl flex flex-col items-center justify-center relative bg-white">
+                <span class="text-[10px] absolute top-1 left-1">${dia}</span>
+        `;
+
+        if (anot) {
+            content = `
+                <div class="h-14 border rounded-xl flex flex-col items-center justify-center relative bg-white shadow-sm ring-1 ring-blue-100">
+                    <span class="text-[10px] absolute top-1 left-1 font-bold text-blue-600">${dia}</span>
+
+                    <!-- ⭐ ÁPICE -->
+                    ${
+                        parseInt(anot.diaCiclo) === parseInt(diaApice)
+                            ? `<i class="fas fa-star text-yellow-400 absolute -top-1 -left-1 text-[10px]"></i>`
+                            : ''
+                    }
+
+                    <!-- D+1 / D+2 / D+3 -->
+                    ${
+                        dPlus
+                            ? `<span class="absolute bottom-0 left-0 right-0 text-[8px] text-gray-500 font-semibold">${dPlus}</span>`
+                            : ''
+                    }
+
+                    <div class="w-6 h-8 ${anot.selo.class} rounded-sm mt-2 flex items-center justify-center text-[10px] relative">
+                        ${
+                            anot.relacao
+                                ? `<i class="fas fa-heart text-red-600 absolute -top-1 -right-1 text-[8px] bg-white rounded-full p-0.5"></i>`
+                                : ''
+                        }
+                        ${renderConteudoSelo(anot.selo)}
+                    </div>
+            `;
+        }
+
+        grid.innerHTML += content + `</div>`;
+    }
+}
+
+
+function renderLista() {
+    const container = document.getElementById('lista-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (ciclos.length === 0) {
+        container.innerHTML =
+            '<p class="text-gray-400 text-sm">Nenhuma anotação.</p>';
+        return;
+    }
+
+    ciclos.forEach(cicloId => {
+        const anotCiclo = anotacoes
+            .filter(a => a.cicloId === cicloId)
+            .sort((a, b) => a.diaCiclo - b.diaCiclo);
+
+        if (anotCiclo.length === 0) return;
+
+        const tipo = obterTipoDoCiclo(cicloId);
+
+        // 🔹 Cabeçalho do ciclo
+        const header = document.createElement('div');
+        header.className = 'mt-6 mb-2 font-bold text-blue-700';
+        header.innerText = `Ciclo ${cicloId} — ${formatarTipoCiclo(tipo)}`;
+        container.appendChild(header);
+
+        // 🔹 Cards das anotações
+        anotCiclo.forEach(a => {
+            const card = document.createElement('div');
+            card.className =
+                'bg-white p-4 rounded-xl border shadow-sm flex gap-4 items-start mb-2 cursor-pointer';
+
+            card.onclick = () => editarAnotacao(a);
+
+            card.innerHTML = `
+                <div class="w-10 h-14 ${a.selo.class} rounded-md flex items-center justify-center text-sm font-bold">
+                    ${renderConteudoSelo(a.selo)}
+                </div>
+
+                <div class="flex-1">
+                    <div class="font-bold text-blue-900">
+                        Dia ${a.diaCiclo} • ${a.sinto || '—'}
+                    </div>
+
+                    <div class="text-xs text-gray-500 mt-1">
+                        ${a.vejo || ''} 
+                        ${a.temp ? `• Temp: ${a.temp}°C` : ''}
+                    </div>
+
+                    ${a.obs ? `<div class="text-xs text-gray-400 mt-1">${a.obs}</div>` : ''}
+                </div>
+
+                ${a.relacao ? `<i class="fas fa-heart text-red-500"></i>` : ''}
+            `;
+
+            container.appendChild(card);
+        });
+    });
+}
+
+
+function renderTabela() {
+    const container = document.getElementById('tabelas-ciclos');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (ciclos.length === 0) {
+        container.innerHTML =
+            '<p class="text-gray-400 text-sm">Nenhum ciclo registrado.</p>';
+        return;
+    }
+
+    ciclos.forEach(cicloId => {
+        const anotCiclo = anotacoes
+            .filter(a => a.cicloId === cicloId)
+            .sort((a, b) => a.diaCiclo - b.diaCiclo);
+
+        if (anotCiclo.length === 0) return;
+
+        const tipoTexto = formatarTipoCiclo(obterTipoDoCiclo(cicloId));
+
+        // 🔹 Divide visualmente em blocos de 38 dias
+        const blocos = [];
+        for (let i = 0; i < anotCiclo.length; i += 38) {
+            blocos.push(anotCiclo.slice(i, i + 38));
+        }
+
+        blocos.forEach((bloco, index) => {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-xl border shadow-sm ciclo-print';
+
+            const titulo =
+                index === 0
+                    ? `Ciclo ${cicloId} — ${tipoTexto}`
+                    : `Ciclo ${cicloId} — ${tipoTexto} (continuação)`;
+
+            const inicioDia = index * 38 + 1;
+
+            let html = `
+                <div class="font-bold text-blue-700 mb-2">${titulo}</div>
+                <div class="tabela-wrapper">
+                <table class="tabela-ciclo">
+            `;
+
+            /* =======================
+               LINHA DIA
+            ======================= */
+            html += `<tr>
+                <td class="grade-pdf-cell col-label">DIA</td>`;
+            for (let i = 0; i < 38; i++) {
+                html += `<td class="grade-pdf-cell">${inicioDia + i}</td>`;
+            }
+            html += `</tr>`;
+
+            /* =======================
+               LINHA DATA (VERTICAL)
+            ======================= */
+            html += `<tr>
+                <td class="grade-pdf-cell col-label">DATA</td>`;
+            for (let i = 0; i < 38; i++) {
+                const a = bloco[i];
+                let dataFmt = '&nbsp;';
+
+                if (a?.data) {
+                    const d = parseDataLocal(a.data);
+                    dataFmt =
+                        `${String(d.getDate()).padStart(2, '0')}/` +
+                        `${String(d.getMonth() + 1).padStart(2, '0')}`;
+                }
+
+                html += `
+                    <td class="grade-pdf-cell data-cell">
+                        <span>${dataFmt}</span>
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =======================
+               LINHA SELO
+            ======================= */
+            html += `<tr>
+                <td class="grade-pdf-cell col-label">SELO</td>`;
+            for (let i = 0; i < 38; i++) {
+                const a = bloco[i];
+                html += `
+                    <td class="grade-pdf-cell ${a ? a.selo.class : ''}">
+                        ${a ? renderConteudoSelo(a.selo) : '&nbsp;'}
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =======================
+               LINHA TEMP
+            ======================= */
+            html += `<tr>
+                <td class="grade-pdf-cell col-label">TEMP</td>`;
+            for (let i = 0; i < 38; i++) {
+                html += `
+                    <td class="grade-pdf-cell">
+                        ${bloco[i]?.temp ?? '&nbsp;'}
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =======================
+               LINHA ATO
+            ======================= */
+            html += `<tr>
+                <td class="grade-pdf-cell col-label">ATO</td>`;
+            for (let i = 0; i < 38; i++) {
+                html += `
+                    <td class="grade-pdf-cell">
+                        ${bloco[i]?.relacao
+                            ? '<i class="fas fa-heart text-red-500"></i>'
+                            : '&nbsp;'}
+                    </td>`;
+            }
+            html += `</tr></table></div>`;
+
+            card.innerHTML = html;
+            container.appendChild(card);
+        });
+    });
+}
+
+
+
+let chart;
+
+function renderGrafico() {
+    const canvas = document.getElementById('tempChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (chart) chart.destroy();
+
+    const filtro = document.getElementById('filtro-ciclo');
+    const cicloSelecionado = filtro ? filtro.value : 'all';
+
+    let dados = anotacoes.filter(a => a.temp !== null && a.temp !== '');
+
+    // 🔹 Aplica filtro por ciclo
+    if (cicloSelecionado !== 'all') {
+        const cicloId = parseInt(cicloSelecionado);
+        dados = dados
+            .filter(a => a.cicloId === cicloId)
+            .sort((a, b) => a.diaCiclo - b.diaCiclo);
+    } else {
+        // 🔹 Todos os ciclos → ordem cronológica
+        dados = dados.sort((a, b) =>
+            parseDataLocal(a.data) - parseDataLocal(b.data)
+        );
+    }
+
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: cicloSelecionado === 'all'
+                ? dados.map(a => a.data)
+                : dados.map(a => `D${a.diaCiclo}`),
+
+            datasets: [{
+                label: 'Temperatura Basal',
+                data: dados.map(a => a.temp),
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239,68,68,0.1)',
+                tension: 0.2,
+                spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperatura (°C)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: cicloSelecionado === 'all'
+                            ? 'Linha do tempo'
+                            : 'Dia do ciclo'
+                    }
+                }
+            }
+        }
+    });
+}
+
+        function sugerirSelo() {
+            const sinto = document.getElementById('f-sinto').value;
+            const vejo  = document.getElementById('f-vejo').value;
+            const temp  = parseFloat(document.getElementById('f-temp').value);
+
+            let seloId = null;
+            if (!document.querySelector('.selo-grid-item')) return;
+            // 🌡️ REGRA 1 — Somente temperatura
+            if (!sinto && !vejo && temp) {
+                seloId = 't_only';
+            }
+
+            // 🔴 Sangramento tem prioridade
+            else if (vejo === 'Sangue') {
+                seloId = 'r1';
+            }
+
+            // 🟨 Infertilidade
+            else if (sinto === 'Seca' && ['','Mancha','Nada'].includes(vejo)) {
+                seloId = 'y0';
+            }
+            else if (sinto === 'Seca') {
+                seloId = 'y1';
+            }
+
+            // 🟩 Fertilidade
+            else if (sinto === 'Úmida' && vejo === 'Cremoso') {
+                seloId = 'g1';
+            }
+            else if (sinto === 'Molhada' && vejo === 'Gel') {
+                seloId = 'g2';
+            }
+            else if (sinto === 'Escorregadia' && vejo === 'Clara de ovo') {
+                seloId = 'g3';
+            }
+
+            // ❌ Se nenhuma regra aplicar, não sugere nada
+            if (!seloId) return;
+
+            const selo = selosDisponiveis.find(s => s.id === seloId);
+            if (!selo) return;
+
+            // Atualiza UI
+            document
+                .querySelectorAll('.selo-grid-item')
+                .forEach(i => i.classList.remove('selected'));
+
+            const index = selosDisponiveis.indexOf(selo);
+            const el = document.querySelectorAll('.selo-grid-item')[index];
+
+            if (el) {
+                el.classList.add('selected');
+                seloSelecionado = selo;
+            }
+        }
+
+
+
+        function detectarApice(anotacoes) {
+            let ultimoDiaEscorregadio = null;
+
+            anotacoes.forEach(a => {
+                if (
+                    a.sinto === 'Escorregadia' &&
+                    a.vejo === 'Clara de ovo'
+                ) {
+                    ultimoDiaEscorregadio = a.diaCiclo;
+                }
+            });
+
+            return ultimoDiaEscorregadio;
+        }
+
+        function calcularPosOvulatorio(anotacoes) {
+            const apice = detectarApice(anotacoes);
+            if (!apice) return {};
+
+            const dias = {};
+            let valido = true;
+
+            for (let i = 1; i <= 3; i++) {
+                const diaAtual = apice + i;
+                const anot = anotacoes.find(a => parseInt(a.diaCiclo) === diaAtual);
+
+                if (anot) {
+                    const voltouMucoFertil =
+                        anot.sinto === 'Escorregadia' ||
+                        (anot.sinto === 'Molhada' && anot.vejo === 'Gel') ||
+                        anot.vejo === 'Clara de ovo';
+
+                    if (voltouMucoFertil) {
+                        valido = false;
+                        break;
+                    }
+                }
+
+                dias[diaAtual] = `D+${i}`;
+            }
+
+            return valido ? dias : {};
+        }
+        function mudarMes(delta) {
+            mesAtual += delta;
+
+            if (mesAtual < 0) {
+                mesAtual = 11;
+                anoAtual--;
+            } else if (mesAtual > 11) {
+                mesAtual = 0;
+                anoAtual++;
+            }
+
+            renderCalendario();
+        }
+
+
+        initSeloPicker();
+        iniciarSincronizacao();
+        document.getElementById('f-data').valueAsDate = new Date();
+
+/* ===============================
+   SINCRONIZA DATA → DIA DO CICLO
+   =============================== */
+document.getElementById('f-data').addEventListener('change', () => {
+    if (!dataInicioCiclo) return;
+
+    const dataAtual = parseDataLocal(
+        document.getElementById('f-data').value
+    );
+
+    const diffTime = dataAtual - dataInicioCiclo;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    document.getElementById('f-dia').value = diffDays > 0 ? diffDays : 1;
+});
+
+
+/* ===============================
+   SINCRONIZA DIA DO CICLO → DATA
+   =============================== */
+document.getElementById('f-dia').addEventListener('change', () => {
+    if (!dataInicioCiclo) return;
+
+    const diaCiclo = parseInt(document.getElementById('f-dia').value);
+    if (isNaN(diaCiclo) || diaCiclo < 1) return;
+
+    const novaData = new Date(dataInicioCiclo);
+    novaData.setDate(novaData.getDate() + (diaCiclo - 1));
+
+    document.getElementById('f-data').value = formatDataLocal(novaData);
+});
+
+
+
+function parseDataLocal(yyyyMMdd) {
+    const [y, m, d] = yyyyMMdd.split('-').map(Number);
+    return new Date(y, m - 1, d); // sem UTC
+}
+
+function formatDataLocal(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btn-salvar');
+    if (!btn) {
+        console.error("❌ Botão salvar não encontrado");
+        return;
+    }
+
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log("🟢 Clique capturado no botão Salvar");
+        salvar();
+    });
+});
+
+function iniciarNovoCiclo() {
+    const tipo = prompt(
+        "Tipo de ciclo:\n\n" +
+        "1 - Normal\n" +
+        "2 - Pós-parto\n" +
+        "3 - Amamentação\n" +
+        "4 - Especial",
+        "1"
+    );
+
+    const mapaTipos = {
+        '1': 'normal',
+        '2': 'pos-parto',
+        '3': 'amamentacao',
+        '4': 'especial'
+    };
+
+    const tipoSelecionado = mapaTipos[tipo];
+    if (!tipoSelecionado) return;
+
+    // 🔹 Descobre última data registrada
+    let ultimaData = null;
+
+    anotacoes.forEach(a => {
+        if (a.data) {
+            const d = parseDataLocal(a.data);
+            if (!ultimaData || d > ultimaData) {
+                ultimaData = d;
+            }
+        }
+    });
+
+    if (!ultimaData) ultimaData = new Date();
+
+    // 🔹 Novo ciclo começa no dia seguinte
+    const novaDataInicio = new Date(ultimaData);
+    novaDataInicio.setDate(novaDataInicio.getDate() + 1);
+
+    // 🔹 Cria novo ciclo
+    cicloAtualId = ciclos.length > 0
+        ? Math.max(...ciclos) + 1
+        : 1;
+
+    ciclos.push(cicloAtualId);
+    cicloAtualTipo = tipoSelecionado;
+    dataInicioCiclo = novaDataInicio;
+
+    // 🔹 Reseta formulário
+    document.getElementById('f-dia').value = 1;
+    document.getElementById('f-data').value = formatDataLocal(novaDataInicio);
+
+    alert(`🆕 Novo ciclo iniciado (${tipoSelecionado.replace('-', ' ')})`);
+}
+
+//funções para ser utilizadas com cautela
+
+async function zerarBancoCompleto(semReload = false) {
+    const ref = db
+        .collection('casais')
+        .doc(casalID)
+        .collection('anotacoes');
+
+    while (true) {
+        const snap = await ref.limit(500).get();
+        if (snap.empty) break;
+
+        const batch = db.batch();
+        snap.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+    }
+
+    anotacoes = [];
+    dataInicioCiclo = null;
+
+    if (!semReload) {
+        alert("🗑️ Banco zerado com sucesso!");
+        location.reload();
+    }
+}
+
+
+async function confirmarApagarTudo() {
+    const ok = confirm(
+        "⚠️ ATENÇÃO!\n\n" +
+        "Isso vai apagar TODAS as anotações deste casal.\n" +
+        "Essa ação NÃO pode ser desfeita.\n\n" +
+        "Deseja continuar?"
+    );
+
+    if (!ok) return;
+
+    try {
+        const ref = db
+            .collection('casais')
+            .doc(casalID)
+            .collection('anotacoes');
+
+        while (true) {
+            const snap = await ref.limit(500).get();
+            if (snap.empty) break;
+
+            const batch = db.batch();
+            snap.docs.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        }
+
+        // Limpa estado local
+        anotacoes = [];
+        dataInicioCiclo = null;
+
+        alert("🗑️ Todas as anotações foram apagadas com sucesso!");
+        location.reload();
+
+    } catch (err) {
+        console.error(err);
+        alert("❌ Erro ao apagar dados");
+    }
+}
+
+function atualizarFiltroCiclo() {
+    const select = document.getElementById('filtro-ciclo');
+    if (!select) return;
+
+    select.innerHTML = `<option value="all">Todos os ciclos</option>`;
+
+    ciclos.forEach(cicloId => {
+        const opt = document.createElement('option');
+        opt.value = cicloId;
+        opt.textContent = `Ciclo ${cicloId}`;
+        select.appendChild(opt);
+    });
+}
+
+async function exportarBanco() {
+    const snap = await db
+        .collection('casais')
+        .doc(casalID)
+        .collection('anotacoes')
+        .orderBy('data')
+        .get();
+
+    const dados = [];
+
+    snap.forEach(doc => {
+        dados.push({
+            id: doc.id,
+            ...doc.data()
+        });
+    });
+
+    const backup = {
+        casalID,
+        exportadoEm: new Date().toISOString(),
+        versao: '1.0',
+        anotacoes: dados
+    };
+
+    const blob = new Blob(
+        [JSON.stringify(backup, null, 2)],
+        { type: 'application/json' }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup-billings-${casalID}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    alert("✅ Backup salvo com sucesso!");
+}
+
+async function importarBanco() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const ok = confirm(
+            "⚠️ Isso vai APAGAR todas as anotações atuais\n" +
+            "e restaurar o backup.\n\nDeseja continuar?"
+        );
+        if (!ok) return;
+
+        const text = await file.text();
+        const backup = JSON.parse(text);
+
+        if (!backup.anotacoes || !Array.isArray(backup.anotacoes)) {
+            alert("❌ Arquivo inválido");
+            return;
+        }
+
+        // 🔥 Apaga tudo SEM recarregar a página
+        await zerarBancoCompleto(true);
+
+        // 🔄 Restaura
+        for (const a of backup.anotacoes) {
+            const { id, ...dados } = a;
+
+            await db
+                .collection('casais')
+                .doc(casalID)
+                .collection('anotacoes')
+                .add(dados);
+        }
+
+        alert("✅ Backup restaurado com sucesso!");
+        location.reload();
+    };
+
+    input.click();
+}
+
+function abrirModalImpressao() {
+    document.getElementById('modal-impressao').classList.remove('hidden');
+}
+
+function fecharModalImpressao() {
+    document.getElementById('modal-impressao').classList.add('hidden');
+}
+
+
+function iniciarSincronizacao() {
+    db.collection('casais')
+        .doc(casalID)
+        .collection('anotacoes')
+        .orderBy('data')
+        .onSnapshot(
+            snapshot => {
+                anotacoes = [];
+
+                snapshot.forEach(doc => {
+                    anotacoes.push({
+                        id: doc.id,      // 👈 ESSENCIAL
+                        ...doc.data()
+                    });
+                });
+                // 🔹 Reconstrói lista de ciclos
+                const set = new Set();
+                anotacoes.forEach(a => set.add(a.cicloId));
+                ciclos = Array.from(set).sort((a, b) => a - b);
+
+                // 🔹 Reconstrói ciclo ativo e continuação
+                reconstruirEstadoAtual();
+
+
+                // 🔹 Atualiza status visual
+                const status = document.getElementById('sync-status');
+                if (status) {
+                    status.innerText = "Sincronizado";
+                    status.className = "text-green-500";
+                }
+
+                // 🔹 Atualiza filtro do gráfico
+                atualizarFiltroCiclo();
+            },
+            error => {
+                console.error("❌ Firebase:", error);
+                const status = document.getElementById('sync-status');
+                if (status) {
+                    status.innerText = "Erro de conexão";
+                    status.className = "text-red-500";
+                }
+            }
+        );
+}
+
+function limparForm() {
+    document.getElementById('f-dia').value = 1;
+    document.getElementById('f-data').valueAsDate = new Date();
+    document.getElementById('f-sinto').value = '';
+    document.getElementById('f-vejo').value = '';
+    document.getElementById('f-regra').value = '';
+    document.getElementById('f-temp').value = '';
+    document.getElementById('f-obs').value = '';
+
+    relacaoAtiva = false;
+    seloSelecionado = null;
+
+    // 🔴 IMPORTANTE: sai do modo edição
+    anotacaoEmEdicaoId = null;
+
+    // remove seleção visual dos selos
+    document
+        .querySelectorAll('.selo-grid-item')
+        .forEach(i => i.classList.remove('selected'));
+
+    // reseta botão de relação
+    document.getElementById('btn-relacao').className =
+        "w-10 h-10 rounded-full bg-white flex items-center justify-center shadow text-gray-300";
+}
+
+
+function reconstruirEstadoAtual() {
+    if (anotacoes.length === 0) {
+        cicloAtualId = 1;
+        dataInicioCiclo = null;
+        return;
+    }
+
+    // 🔹 Último ciclo existente
+    cicloAtualId = Math.max(...anotacoes.map(a => a.cicloId));
+
+    // 🔹 Anotações do último ciclo
+    const anotacoesUltimoCiclo = anotacoes
+        .filter(a => a.cicloId === cicloAtualId)
+        .sort((a, b) => a.diaCiclo - b.diaCiclo);
+
+    if (anotacoesUltimoCiclo.length === 0) return;
+
+    // 🔹 Primeira anotação do ciclo = data de início
+    const primeira = anotacoesUltimoCiclo[0];
+    dataInicioCiclo = parseDataLocal(primeira.data);
+
+    // 🔹 Última anotação
+    const ultima = anotacoesUltimoCiclo[anotacoesUltimoCiclo.length - 1];
+
+    // 🔹 Prepara o formulário para continuar
+    document.getElementById('f-dia').value = ultima.diaCiclo + 1;
+
+    const proximaData = new Date(dataInicioCiclo);
+    proximaData.setDate(proximaData.getDate() + ultima.diaCiclo);
+
+    document.getElementById('f-data').value = formatDataLocal(proximaData);
+}
+
+
+function editarAnotacao(a) {
+    anotacaoEmEdicaoId = a.id;
+
+    document.getElementById('f-dia').value   = a.diaCiclo;
+    document.getElementById('f-data').value  = a.data;
+    document.getElementById('f-sinto').value = a.sinto || '';
+    document.getElementById('f-vejo').value  = a.vejo || '';
+    document.getElementById('f-regra').value = a.regra || '';
+    document.getElementById('f-temp').value  = a.temp || '';
+    document.getElementById('f-obs').value   = a.obs || '';
+
+    relacaoAtiva = !!a.relacao;
+    // 🔹 Marca selo visualmente no picker
+setTimeout(() => {
+    document
+        .querySelectorAll('.selo-grid-item')
+        .forEach((el, index) => {
+            const s = selosDisponiveis[index];
+            if (s && s.id === a.selo.id) {
+                el.classList.add('selected');
+            }
+        });
+}, 100);
+
+    changeTab('view-anotar');
+}
+
+function obterTipoDoCiclo(cicloId) {
+    const primeira = anotacoes.find(
+        a => a.cicloId === cicloId && a.tipoCiclo
+    );
+    return primeira?.tipoCiclo || 'normal';
+}
+
+function iniciarNovoCicloSemPrompt(tipoExistente) {
+    let ultimaData = null;
+
+    anotacoes.forEach(a => {
+        if (a.data) {
+            const d = parseDataLocal(a.data);
+            if (!ultimaData || d > ultimaData) ultimaData = d;
+        }
+    });
+
+    if (!ultimaData) ultimaData = new Date();
+
+    const novaDataInicio = new Date(ultimaData);
+    novaDataInicio.setDate(novaDataInicio.getDate() + 1);
+
+    cicloAtualId = Math.max(...ciclos) + 1;
+    ciclos.push(cicloAtualId);
+
+    cicloAtualTipo = tipoExistente;
+    dataInicioCiclo = novaDataInicio;
+
+    document.getElementById('f-dia').value = 1;
+    document.getElementById('f-data').value = formatDataLocal(novaDataInicio);
+}
+
+function formatarTipoCiclo(tipo) {
+    const mapa = {
+        'normal': 'Normal',
+        'pos-parto': 'Pós-parto',
+        'amamentacao': 'Amamentação',
+        'especial': 'Especial'
+    };
+    return mapa[tipo] || 'Normal';
+}
+
+
+ </script>
+
+ </body>
+</html>

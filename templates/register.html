@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1e3a8a">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <title>Cadastro - MOB Digital</title>
+</head>
+
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
+        <h2 class="text-2xl font-bold text-blue-900 mb-2 text-center">Criar Conta</h2>
+        <p class="text-center text-gray-400 text-sm mb-8">
+            Junte-se ao controle natural do casal
+        </p>
+        
+        <form action="/register" method="POST" class="space-y-4">
+            
+            <div>
+                <label class="text-xs font-bold text-gray-400 ml-2 uppercase">
+                    Nome Completo
+                </label>
+                <input type="text" name="name" placeholder="Ex: Mirelly Santos"
+                    class="w-full p-4 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-gray-400 ml-2 uppercase">
+                    E-mail
+                </label>
+                <input type="email" name="email" placeholder="seu@email.com"
+                    class="w-full p-4 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-gray-400 ml-2 uppercase">
+                    WhatsApp (com DDD)
+                </label>
+                <input type="text" name="whatsapp" placeholder="81999999999"
+                    class="w-full p-4 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-gray-400 ml-2 uppercase">
+                    Defina uma Senha
+                </label>
+                <input type="password" name="password" placeholder="••••••••"
+                    class="w-full p-4 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+            
+            <button type="submit"
+                class="w-full bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-800 transition transform active:scale-95">
+                Finalizar Cadastro
+            </button>
+
+        </form>
+        
+        <p class="mt-6 text-center text-sm text-gray-500">
+            Já tem uma conta?
+            <a href="/login" class="text-blue-600 font-bold">
+                Fazer Login
+            </a>
+        </p>
+    </div>
+
+    <!-- Service Worker -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}')
+            .then(() => console.log('Service Worker registrado'))
+            .catch(err => console.log('Erro no SW:', err));
+    }
+    </script>
+
+</body>
+</html>

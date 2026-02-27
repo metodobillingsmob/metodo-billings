@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1e3a8a">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <title>Editar Usuário - MOB</title>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+<div class="bg-white p-8 rounded-2xl shadow w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4 text-blue-900">
+        Editar Usuário
+    </h2>
+
+    <form method="POST">
+
+        <label class="block mb-1 text-sm">Nome</label>
+        <input type="text"
+               name="name"
+               value="{{ user.name }}"
+               class="w-full border p-2 mb-3 rounded"
+               required>
+
+        <label class="block mb-1 text-sm">Email</label>
+        <input type="email"
+               name="email"
+               value="{{ user.email }}"
+               class="w-full border p-2 mb-3 rounded"
+               required>
+
+        <label class="block mb-1 text-sm">WhatsApp</label>
+        <input type="text"
+               name="whatsapp"
+               value="{{ user.whatsapp }}"
+               class="w-full border p-2 mb-4 rounded">
+
+        <button type="submit"
+                class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">
+            Salvar Alterações
+        </button>
+
+    </form>
+</div>
+
+<!-- Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}')
+        .then(() => console.log('Service Worker registrado'))
+        .catch(err => console.log('Erro no SW:', err));
+}
+</script>
+
+</body>
+</html>
