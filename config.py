@@ -5,7 +5,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'uma-chave-muito-secreta-123'
     
     # Caminho do banco de dados SQLite (arquivo local)
-    SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://postgres:SUA_SENHA@db.rkladrquoxerhwpjyyvb.supabase.co:5432/postgres?sslmode=require"
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Configurações de E-mail para Redefinição de Senha (Exemplo Gmail)
@@ -20,3 +20,4 @@ class Config:
     TWILIO_SID = 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
     TWILIO_TOKEN = 'your_twilio_auth_token'
+
