@@ -7,6 +7,9 @@ import config
 
 app = Flask(__name__)
 app.config.from_object(config.Config)
+
+print("DATABASE_URL:", app.config.get("SQLALCHEMY_DATABASE_URI"))
+
 db.init_app(app)
 with app.app_context():
     db.create_all()
@@ -377,3 +380,4 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(debug=True)
+
