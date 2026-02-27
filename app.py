@@ -8,6 +8,8 @@ import config
 app = Flask(__name__)
 app.config.from_object(config.Config)
 db.init_app(app)
+with app.app_context():
+    db.create_all()
 mail = Mail(app)
 
 login_manager = LoginManager()
@@ -373,4 +375,5 @@ def remover_admin(user_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+
     app.run(debug=True)
