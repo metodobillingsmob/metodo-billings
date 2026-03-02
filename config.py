@@ -11,6 +11,9 @@ class Config:
     # SESSÃO / LOGIN
     # =========================
     REMEMBER_COOKIE_DURATION = timedelta(days=90)
+    REMEMBER_COOKIE_REFRESH_EACH_REQUEST = True
+    REMEMBER_COOKIE_NAME = "remember_token"
+
     SESSION_PERMANENT = True
     PERMANENT_SESSION_LIFETIME = timedelta(days=90)
 
