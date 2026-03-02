@@ -1473,7 +1473,7 @@ async function iniciarSincronizacao() {
         // 🔹 Reconstrói lista de ciclos (mantendo sua lógica original)
         const set = new Set();
         anotacoes.forEach(a => set.add(a.cicloId));
-        ciclos = Array.from(set).sort((a, b) => a - b);
+        ciclos = Array.from(set).sort((a, b) => b - a);
 
         reconstruirEstadoAtual();
 
@@ -1683,3 +1683,4 @@ installBtn.addEventListener('click', async () => {
 </script>
  </body>
 </html>
+
