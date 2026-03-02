@@ -1694,6 +1694,7 @@ async function excluirAnotacao() {
 function cancelarEdicao() {
     anotacaoEmEdicaoId = null;
     limparForm();
+    reconstruirEstadoAtual();
 }
 
  </script>
@@ -1724,3 +1725,4 @@ installBtn.addEventListener('click', async () => {
 </script>
  </body>
 </html>
+
