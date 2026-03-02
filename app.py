@@ -1,16 +1,16 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask_mail import Mail, Message
 from models import db, User, Note
 import json
 import config
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 app = Flask(__name__)
 app.config.from_object(config.Config)
 db.init_app(app)
 with app.app_context():
     db.create_all()
-mail = Mail(app)
 
 login_manager = LoginManager()
 login_manager.login_view = 'login'
@@ -349,11 +349,10 @@ def remover_admin(user_id):
 
     return redirect(url_for('admin_panel'))
 
-    from flask_mail import Mail, Message
+
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
 
-mail = Mail(app)
 
 # Gerador de token seguro
 def gerar_token(email):
@@ -379,14 +378,23 @@ def forgot():
             token = gerar_token(user.email)
             link = url_for('reset_password', token=token, _external=True)
 
-            msg = Message(
-                'Recuperação de Senha - MOB',
-                sender=app.config['MAIL_USERNAME'],
-                recipients=[user.email]
+            message = Mail(
+                from_email=app.config['EMAIL_SENDER'],
+                to_emails=user.email,
+                subject='Recuperação de Senha - MOB',
+                plain_text_content=f'Clique no link para redefinir sua senha:\n\n{link}',
+                html_content=f'''
+                <strong>Recuperação de Senha</strong><br><br>
+                Clique no link abaixo para redefinir sua senha:<br><br>
+                <a href="{link}">{link}</a>
+                '''
             )
 
-            msg.body = f'Clique no link para redefinir sua senha:\n\n{link}'
-            mail.send(msg)
+            try:
+                sg = SendGridAPIClient(app.config['SENDGRID_API_KEY'])
+                sg.send(message)
+            except Exception as e:
+                print(f"Erro ao enviar e-mail: {e}")
 
         flash('Se o e-mail estiver cadastrado, você receberá instruções.')
         return redirect(url_for('login'))
