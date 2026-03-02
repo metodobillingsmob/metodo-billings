@@ -14,6 +14,13 @@ class Config:
     SESSION_PERMANENT = True
     PERMANENT_SESSION_LIFETIME = timedelta(days=90)
 
+    REMEMBER_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SAMESITE = "Lax"
+
     # =========================
     # SENDGRID
     # =========================
@@ -25,6 +32,3 @@ class Config:
     # =========================
     TWILIO_SID = os.environ.get("TWILIO_SID")
     TWILIO_TOKEN = os.environ.get("TWILIO_TOKEN")
-
-
-
