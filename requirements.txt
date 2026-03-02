@@ -1,8 +1,9 @@
 Flask==3.1.2
 Flask-Login==0.6.3
-Flask-Mail==0.10.0
 Flask-SQLAlchemy==3.1.1
 Werkzeug==3.1.4
 SQLAlchemy==2.0.46
 psycopg[binary]
 gunicorn==21.2.0
+sendgrid
+
