@@ -1654,7 +1654,37 @@ function formatarTipoCiclo(tipo) {
     return mapa[tipo] || 'Normal';
 }
 
+async function excluirAnotacao() {
+    if (!anotacaoEmEdicaoId) {
+        alert("Nenhuma anotação selecionada.");
+        return;
+    }
 
+    const confirmar = confirm("Deseja realmente excluir esta anotação?");
+    if (!confirmar) return;
+
+    try {
+        const response = await fetch(`/api/anotacoes/${anotacaoEmEdicaoId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            // Remove da lista local
+            anotacoes = anotacoes.filter(a => a.id !== anotacaoEmEdicaoId);
+
+            limparForm();
+            await iniciarSincronizacao();
+
+            alert("🗑️ Anotação excluída com sucesso!");
+        } else {
+            alert("Erro ao excluir no servidor.");
+        }
+
+    } catch (error) {
+        console.error("Erro ao excluir:", error);
+        alert("Erro de conexão com servidor.");
+    }
+}
  </script>
 <!-- Service Worker -->
 <script>
@@ -1683,4 +1713,5 @@ installBtn.addEventListener('click', async () => {
 </script>
  </body>
 </html>
+
 
