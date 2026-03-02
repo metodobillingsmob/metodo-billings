@@ -372,10 +372,73 @@ def remover_admin(user_id):
 
     return redirect(url_for('admin_panel'))
 
+    from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
+
+mail = Mail(app)
+
+# Gerador de token seguro
+def gerar_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt='recuperacao-senha')
+
+def validar_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(token, salt='recuperacao-senha', max_age=expiration)
+    except:
+        return None
+    return email
+
+
+@app.route('/forgot', methods=['GET', 'POST'])
+def forgot():
+    if request.method == 'POST':
+        email = request.form['email']
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            token = gerar_token(user.email)
+            link = url_for('reset_password', token=token, _external=True)
+
+            msg = Message(
+                'Recuperação de Senha - MOB',
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[user.email]
+            )
+
+            msg.body = f'Clique no link para redefinir sua senha:\n\n{link}'
+            mail.send(msg)
+
+        flash('Se o e-mail estiver cadastrado, você receberá instruções.')
+        return redirect(url_for('login'))
+
+    return render_template('forgot.html')
+
+@app.route('/reset/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    email = validar_token(token)
+    if not email:
+        return "Token inválido ou expirado."
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return "Usuário não encontrado."
+
+    if request.method == 'POST':
+        nova_senha = request.form['password']
+        user.set_password(nova_senha)
+        db.session.commit()
+        flash('Senha redefinida com sucesso.')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html')
+
+
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-
     app.run(debug=True)
-
-
