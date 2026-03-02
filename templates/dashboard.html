@@ -345,7 +345,11 @@
                     <div>
                         <textarea id="f-obs" class="input-obs" placeholder="Observações (Medicação, Stress, etc)" rows="3"></textarea>
                     </div>
-
+                    <div id="modo-edicao"
+                    class="hidden w-full bg-yellow-50 text-yellow-800 p-3 rounded-xl font-semibold text-center">
+                    ✏️ Você está editando uma anotação
+                    </div>
+                    <button id="btn-excluir" onclick="excluirAnotacao()" class="w-full bg-red-100 text-red-700 py-3 rounded-xl font-bold hidden"> Excluir Anotação </button>
                     <button id="btn-salvar"class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-200">Salvar no Diário</button>
                 </div>
             </div>
@@ -1485,7 +1489,7 @@ async function iniciarSincronizacao() {
 }
 
 // Para simular o "tempo real" entre marido e mulher, adicione um intervalo:
-setInterval(iniciarSincronizacao, 5000); // Atualiza a cada 5 segundos
+//setInterval(iniciarSincronizacao, 5000); // Atualiza a cada 5 segundos
 
 function limparForm() {
     document.getElementById('f-dia').value = 1;
@@ -1510,6 +1514,22 @@ function limparForm() {
     // reseta botão de relação
     document.getElementById('btn-relacao').className =
         "w-10 h-10 rounded-full bg-white flex items-center justify-center shadow text-gray-300";
+        
+        const btnExcluir = document.getElementById('btn-excluir');
+        if (btnExcluir) {
+            btnExcluir.classList.add('hidden');
+        }
+        const aviso = document.getElementById('modo-edicao');
+        if (aviso) {
+            aviso.classList.add('hidden');
+        }
+
+        const btnSalvar = document.getElementById('btn-salvar');
+        if (btnSalvar) {
+            btnSalvar.textContent = "Salvar no Diário";
+            btnSalvar.classList.remove('bg-green-600');
+            btnSalvar.classList.add('bg-blue-700');
+        }
 }
 
 
@@ -1559,19 +1579,37 @@ function editarAnotacao(a) {
     document.getElementById('f-obs').value   = a.obs || '';
 
     relacaoAtiva = !!a.relacao;
-    // 🔹 Marca selo visualmente no picker
-setTimeout(() => {
-    document
-        .querySelectorAll('.selo-grid-item')
-        .forEach((el, index) => {
-            const s = selosDisponiveis[index];
-            if (s && s.id === a.selo.id) {
-                el.classList.add('selected');
-            }
-        });
-}, 100);
+
+    setTimeout(() => {
+        document
+            .querySelectorAll('.selo-grid-item')
+            .forEach((el, index) => {
+                const s = selosDisponiveis[index];
+                if (s && s.id === a.selo.id) {
+                    el.classList.add('selected');
+                }
+            });
+    }, 100);
 
     changeTab('view-anotar');
+
+    // 👇 COLOCA AQUI
+    const btnExcluir = document.getElementById('btn-excluir');
+    if (btnExcluir) {
+        btnExcluir.classList.remove('hidden');
+    }
+    const aviso = document.getElementById('modo-edicao');
+    if (aviso) {
+        aviso.classList.remove('hidden');
+    }
+
+    const btnSalvar = document.getElementById('btn-salvar');
+    if (btnSalvar) {
+        btnSalvar.textContent = "Atualizar Anotação";
+        btnSalvar.classList.remove('bg-blue-700');
+        btnSalvar.classList.add('bg-green-600');
+    }
+    
 }
 
 function obterTipoDoCiclo(cicloId) {
