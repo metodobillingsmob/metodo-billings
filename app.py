@@ -183,30 +183,7 @@ def change_password():
 
     flash('Senha alterada com sucesso!')
     return redirect(url_for('profile'))
-
-@app.route('/forgot', methods=['GET', 'POST'])
-def forgot():
-    if request.method == 'POST':
-        email = request.form['email']
-        user = User.query.filter_by(email=email).first()
-
-        if user:
-            try:
-                msg = Message(
-                    subject="Teste envio",
-                    sender=app.config['MAIL_USERNAME'],
-                    recipients=[email]
-                )
-                msg.body = "Teste de envio"
-                mail.send(msg)
-                print("EMAIL ENVIADO COM SUCESSO")
-            except Exception as e:
-                print("ERRO AO ENVIAR EMAIL:", e)
-
-        return redirect(url_for('login'))
-
-    return render_template('forgot.html')
-    
+   
 @app.route('/restore', methods=['POST'])
 @login_required
 def restore():
