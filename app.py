@@ -42,7 +42,7 @@ def login():
 
         if user and user.check_password(password):
 
-            login_user(user)
+            login_user(user, remember=True)
 
             # 🔥 Recuperação automática de admin
             admin_existente = User.query.filter_by(is_admin=True).first()
@@ -84,7 +84,7 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        login_user(user)
+        login_user(user, remember=True)
         return redirect(url_for('dashboard'))
 
     return render_template('register.html')
@@ -427,3 +427,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
