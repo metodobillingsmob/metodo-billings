@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, session
 from models import db, User, Note
 import json
 import config
@@ -43,7 +43,8 @@ def login():
         if user and user.check_password(password):
 
             login_user(user, remember=True)
-
+            session.permanent = True
+            
             # 🔥 Recuperação automática de admin
             admin_existente = User.query.filter_by(is_admin=True).first()
 
@@ -85,6 +86,8 @@ def register():
         db.session.commit()
 
         login_user(user, remember=True)
+        session.permanent = True
+
         return redirect(url_for('dashboard'))
 
     return render_template('register.html')
@@ -427,4 +430,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
