@@ -350,6 +350,7 @@
                     ✏️ Você está editando uma anotação
                     </div>
                     <button id="btn-excluir" onclick="excluirAnotacao()" class="w-full bg-red-100 text-red-700 py-3 rounded-xl font-bold hidden"> Excluir Anotação </button>
+                    <button id="btn-cancelar" onclick="cancelarEdicao()"class="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hidden">Cancelar Edição</button>
                     <button id="btn-salvar"class="w-full bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-200">Salvar no Diário</button>
                 </div>
             </div>
@@ -1523,6 +1524,10 @@ function limparForm() {
         if (aviso) {
             aviso.classList.add('hidden');
         }
+        const btnCancelar = document.getElementById('btn-cancelar');
+        if (btnCancelar) {
+            btnCancelar.classList.add('hidden');
+        }
 
         const btnSalvar = document.getElementById('btn-salvar');
         if (btnSalvar) {
@@ -1595,13 +1600,13 @@ function editarAnotacao(a) {
 
     // 👇 COLOCA AQUI
     const btnExcluir = document.getElementById('btn-excluir');
-    if (btnExcluir) {
-        btnExcluir.classList.remove('hidden');
-    }
+    if (btnExcluir) btnExcluir.classList.remove('hidden');
+
     const aviso = document.getElementById('modo-edicao');
-    if (aviso) {
-        aviso.classList.remove('hidden');
-    }
+    if (aviso) aviso.classList.remove('hidden');
+
+    const btnCancelar = document.getElementById('btn-cancelar');
+    if (btnCancelar) btnCancelar.classList.remove('hidden');
 
     const btnSalvar = document.getElementById('btn-salvar');
     if (btnSalvar) {
@@ -1685,6 +1690,12 @@ async function excluirAnotacao() {
         alert("Erro de conexão com servidor.");
     }
 }
+
+function cancelarEdicao() {
+    anotacaoEmEdicaoId = null;
+    limparForm();
+}
+
  </script>
 <!-- Service Worker -->
 <script>
@@ -1713,5 +1724,3 @@ installBtn.addEventListener('click', async () => {
 </script>
  </body>
 </html>
-
-
