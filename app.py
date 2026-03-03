@@ -423,6 +423,10 @@ def reset_password(token):
 
     return render_template('reset_password.html')
 
+@app.route('/manual')
+@login_required
+def manual():
+    return render_template('manual.html')
 
 
 
