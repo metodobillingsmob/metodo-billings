@@ -184,11 +184,10 @@
     .ciclo-print {
         break-inside: avoid;
         page-break-inside: avoid;
-        page-break-after: always;
     }
 
-    .ciclo-print:last-child {
-        page-break-after: auto;
+    .ciclo-print:nth-of-type(2n) {
+        page-break-after: always;
     }
 }
 
@@ -1730,3 +1729,4 @@ installBtn.addEventListener('click', async () => {
 </script>
  </body>
 </html>
+
