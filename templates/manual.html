@@ -1,56 +1,327 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual - MOB</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual do Aplicativo e-Billings</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+.selo {
+    width: 45px;
+    height: 60px;
+    border-radius: 6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+
+.bg-red   { background:#ff0000; color:white; }
+.bg-yellow{ background:#ffff00; color:black; }
+.bg-green { background:#008000; color:white; }
+.bg-white { background:#ffffff; color:black; border:1px solid #ddd; }
+.bg-gray  { background:#a09090; color:black; }
+
+
+.selo-box {
+    width: 35px;
+    height: 50px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gota {
+    width: 10px;
+    height: 14px;
+    background: white;
+    border-radius: 50% 50% 50% 50%;
+    position: relative;
+}
+
+.gota::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 2px;
+    width: 6px;
+    height: 8px;
+    background: white;
+    transform: rotate(45deg);
+    border-radius: 0 100% 0 100%;
+}
+
+</style>
+
 </head>
 
 <body class="bg-gray-50">
 
-<header class="bg-white p-4 shadow-sm">
-    <div class="max-w-4xl mx-auto flex justify-between items-center">
-        <h1 class="text-xl font-bold text-blue-900">Manual do Sistema</h1>
-        <a href="/dashboard" class="text-blue-600 font-semibold">Voltar</a>
-    </div>
+<header class="bg-white p-4 shadow-sm sticky top-0">
+<div class="max-w-4xl mx-auto flex items-center gap-4">
+<a href="/dashboard" class="text-blue-600 text-lg">←</a>
+<h1 class="text-2xl font-bold text-blue-900">
+Manual do Aplicativo e-Billings
+</h1>
+</div>
 </header>
 
-<main class="max-w-4xl mx-auto p-6 space-y-6">
+<main class="max-w-4xl mx-auto p-6 space-y-10">
 
-    <section class="bg-white p-6 rounded-2xl shadow-sm border">
-        <h2 class="font-bold text-lg text-blue-800 mb-3">
-            📌 Como registrar uma anotação
-        </h2>
-        <p class="text-gray-600 text-sm">
-            Selecione o dia do ciclo, preencha os campos "O que sinto" e
-            "O que vejo", escolha o selo correspondente e clique em
-            <strong>Salvar no Diário</strong>.
-        </p>
-    </section>
+<!-- APRESENTAÇÃO -->
+<section class="bg-white p-6 rounded-xl shadow-sm border space-y-4">
+<h2 class="text-xl font-bold">Apresentação</h2>
 
-    <section class="bg-white p-6 rounded-2xl shadow-sm border">
-        <h2 class="font-bold text-lg text-blue-800 mb-3">
-            📊 Como interpretar o gráfico
-        </h2>
-        <p class="text-gray-600 text-sm">
-            O gráfico mostra a temperatura basal ao longo do ciclo.
-            Ele auxilia na identificação da fase pós-ovulatória.
-        </p>
-    </section>
+<p>
+Aplicativo on-line para anotação diária do Método de Ovulação Billings.
+</p>
 
-    <section class="bg-white p-6 rounded-2xl shadow-sm border">
-        <h2 class="font-bold text-lg text-blue-800 mb-3">
-            🟢 Significado das cores
-        </h2>
-        <ul class="text-gray-600 text-sm space-y-1">
-            <li><strong>Verde:</strong> Fertilidade</li>
-            <li><strong>Amarelo:</strong> Infertilidade</li>
-            <li><strong>Vermelho:</strong> Sangramento</li>
-        </ul>
-    </section>
+<p>
+O aplicativo tem o objetivo de auxiliar nas anotações do método, aproveitando a facilidade de ter o celular sempre em mãos para registrar diariamente suas observações.
+</p>
+
+<p>
+A utilização desta ferramenta possibilita visualizar o gráfico do ciclo a qualquer momento — pelo celular, tablet ou computador — e facilita o compartilhamento das informações entre o casal e a instrutora.
+</p>
+
+<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+<p class="text-sm text-yellow-800">
+⚠ <strong>Importante!</strong><br>
+O aplicativo não deve ser utilizado por pessoas que ainda não possuem conhecimento do Método de Ovulação Billings.
+Caso você seja iniciante, procure a WOOMB International – Organização Mundial do Método de Ovulação Billings, para obter informações adequadas e iniciar o aprendizado de forma segura.
+</p>
+</div>
+
+<p>
+O aplicativo foi desenvolvido para ajudar você a conhecer e controlar seu corpo com a segurança do Método Billings: sem efeitos colaterais, alinhado aos seus valores e criado para facilitar uma rotina prática de registros, garantindo que você nunca perca dados essenciais do seu ciclo.
+</p>
+</section>
+
+<!-- REGRAS -->
+<section class="space-y-6">
+
+<h2 class="text-xl font-bold">As Regras do Método de Ovulação Billings</h2>
+
+<p>
+O aplicativo e-Billings foi projetado para apoiar mulheres e casais que já conhecem o Método Billings e estão em acompanhamento com uma instrutora.
+</p>
+
+<h3 class="font-semibold text-lg">1. Para Conseguir a Gravidez</h3>
+<ul class="list-disc pl-6 space-y-1">
+<li>Aplicar as Regras dos Primeiros Dias.</li>
+<li>Adiar relações sexuais até a sensação escorregadia.</li>
+<li>Os dias seguintes ao início da sensação escorregadia são os mais férteis.</li>
+<li>Relações devem ocorrer enquanto a sensação escorregadia é sentida e por um ou dois dias após o Ápice.</li>
+</ul>
+
+<h3 class="font-semibold text-lg">2. Para Evitar a Gravidez</h3>
+<ul class="list-disc pl-6 space-y-1">
+<li>Aplicam-se as Regras dos Primeiros Dias.</li>
+<li>Aplicar a Regra do Ápice conforme orientação da instrutora.</li>
+</ul>
+
+<h3 class="font-semibold text-lg">As Regras dos Primeiros Dias</h3>
+
+<h4 class="font-semibold">Regra 1</h4>
+<p>Evitar relações sexuais nos dias de forte sangramento durante a menstruação.</p>
+
+<h4 class="font-semibold">Regra 2</h4>
+<p>Em dias reconhecidos como inférteis (PBI), são permitidas noites alternadas para relações sexuais.</p>
+
+<h4 class="font-semibold">Regra 3</h4>
+<p>
+Evitar relações sexuais em qualquer dia de fluxo ou sangramento que interrompa o PBI.
+É necessário aguardar três dias completos de retorno ao PBI e retomar relações na noite do 4º dia.
+</p>
+
+<h3 class="font-semibold text-lg">Regra do Ápice</h3>
+<p>
+A partir da manhã do 4º dia após o Ápice até o fim do ciclo, relações são disponíveis todos os dias a qualquer hora.
+</p>
+
+</section>
+
+<!-- FUNCIONALIDADES -->
+<section class="space-y-6">
+
+<h2 class="text-xl font-bold">Recursos da Tela Inicial</h2>
+
+<h3 class="font-semibold">Nova Anotação Diária</h3>
+<p>Registro diário de:</p>
+<ul class="list-disc pl-6">
+<li>Sensações vulvares;</li>
+<li>Observações de muco;</li>
+<li>Informações relevantes do dia.</li>
+</ul>
+
+<h3 class="font-semibold">Ciclo Atual</h3>
+<ul class="list-disc pl-6">
+<li>Visualizar ciclo atual;</li>
+<li>Acessar histórico do ciclo;</li>
+<li>Exportar gráfico em PDF.</li>
+</ul>
+
+<h3 class="font-semibold">Histórico</h3>
+<ul class="list-disc pl-6">
+<li>Anotações anteriores;</li>
+<li>Ciclos completos;</li>
+<li>Registro cronológico das sensações.</li>
+</ul>
+
+<h3 class="font-semibold">Meu PBI</h3>
+<p>
+Registro do Padrão Básico de Infertilidade com orientação da instrutora.
+</p>
+
+<h3 class="font-semibold">Caixa de Entrada</h3>
+<ul class="list-disc pl-6">
+<li>Mensagens da instrutora;</li>
+<li>Orientações importantes;</li>
+<li>Avisos do aplicativo.</li>
+</ul>
+
+<h3 class="font-semibold">Minhas Usuárias (Instrutoras)</h3>
+<p>Acompanhamento das usuárias vinculadas.</p>
+
+</section>
+
+<!-- SELOS -->
+<section class="bg-white p-6 rounded-2xl shadow-sm border space-y-10">
+
+<h2 class="text-xl font-bold text-gray-800">
+Explicação dos Selos
+</h2>
+
+<!-- ================= SANGRAMENTO ================= -->
+<div class="space-y-4">
+<h3 class="font-semibold text-lg text-red-600">🔴 Sangramento</h3>
+
+<div class="flex gap-6 items-center">
+    <!-- r1 -->
+        <div class="w-10 h-14 bg-red-600 rounded-md flex items-center justify-center">
+            <div class="grid grid-cols-2 gap-x-1 gap-y-0 justify-items-center">
+                <i class="fa-solid fa-droplet text-white text-[12px]"></i>
+                <i class="fa-solid fa-droplet text-white text-[12px]"></i>
+                <i class="fa-solid fa-droplet text-white text-[12px] col-span-2"></i>
+            </div>
+        </div>
+
+    <!-- r2 -->
+        <div class="w-10 h-14 bg-red-600 rounded-md flex items-center justify-center">
+            <i class="fa-solid fa-droplet text-white text-[12px]"></i>
+        </div>
+
+</div>
+
+<p class="text-gray-600 text-sm">
+Utilizados para registrar dias de menstruação.
+Três gotas representam sangramento intenso.
+Uma gota representa sangramento leve.
+</p>
+</div>
+
+<!-- ================= PBI ================= -->
+<div class="space-y-4">
+<h3 class="font-semibold text-lg text-yellow-600">🟨 Padrão Básico de Infertilidade (PBI)</h3>
+
+<div class="flex gap-4 items-center">
+    <div class="w-10 h-14 bg-yellow-300 rounded-md"></div>
+    <div class="w-10 h-14 bg-yellow-300 rounded-md flex items-center justify-center font-bold">1</div>
+    <div class="w-10 h-14 bg-yellow-300 rounded-md flex items-center justify-center font-bold">2</div>
+    <div class="w-10 h-14 bg-yellow-300 rounded-md flex items-center justify-center font-bold">3</div>
+</div>
+
+<p class="text-gray-600 text-sm">
+Representam dias reconhecidos como inférteis conforme padrão individual.
+Devem ser definidos com orientação da instrutora.
+</p>
+</div>
+
+<!-- ================= FERTILIDADE ================= -->
+<div class="space-y-4">
+<h3 class="font-semibold text-lg text-green-600">🟩 Fertilidade</h3>
+
+<div class="flex gap-4 items-center">
+    <div class="w-10 h-14 bg-green-700 rounded-md"></div>
+    <div class="w-10 h-14 bg-green-700 rounded-md flex items-center justify-center text-white font-bold">1</div>
+    <div class="w-10 h-14 bg-green-700 rounded-md flex items-center justify-center text-white font-bold">2</div>
+    <div class="w-10 h-14 bg-green-700 rounded-md flex items-center justify-center text-white font-bold">3</div>
+</div>
+
+<p class="text-gray-600 text-sm">
+Indicam progressão da fertilidade.
+O último dia de sensação escorregadia é identificado como Dia do Ápice.
+</p>
+</div>
+
+<!-- ================= OBSERVAÇÕES ================= -->
+<div class="space-y-4">
+<h3 class="font-semibold text-lg text-gray-700">⬜ Observações</h3>
+
+<div class="flex gap-6 items-center">
+
+    <!-- 👶 Observação interna -->
+    <div class="w-10 h-14 bg-white border rounded-md flex items-center justify-center">
+        <i class="fas fa-baby text-[22px]"></i>
+    </div>
+
+    <!-- 👶 + × -->
+    <div class="w-10 h-14 bg-white border rounded-md flex flex-col items-center justify-center leading-none">
+        <i class="fas fa-baby text-[22px]"></i>
+        <span class="text-[16px] font-bold -mt-1">×</span>
+    </div>
+
+    <!-- branco vazio -->
+    <div class="w-10 h-14 bg-white border rounded-md"></div>
+</div>
+
+<p class="text-gray-600 text-sm">
+Usados para observações específicas, retorno ao PBI ou ausência de muco.
+</p>
+</div>
+
+<!-- ================= TEMPERATURA ================= -->
+<div class="space-y-4">
+<h3 class="font-semibold text-lg text-gray-700">🌡️ Apenas Temperatura</h3>
+
+<div class="w-10 h-14 bg-gray-400 rounded-md flex items-center justify-center">
+    <i class="fas fa-thermometer-half"></i>
+</div>
+
+<p class="text-gray-600 text-sm">
+Utilizado quando apenas temperatura basal foi registrada.
+</p>
+</div>
+
+<!-- ================= PÓS ÁPICE ================= -->
+<div class="space-y-3">
+<h3 class="font-semibold text-lg">Selos após o Ápice</h3>
+<p class="text-gray-600 text-sm">
+Referem-se aos três dias posteriores ao Ápice (D+1, D+2, D+3).
+Podem indicar:
+</p>
+<ul class="list-disc pl-6 text-gray-600 text-sm">
+<li>Fluxo sentido e/ou visto</li>
+<li>Nenhum fluxo sentido ou visto</li>
+<li>Fluxo presente + relação sexual</li>
+</ul>
+</div>
+
+<!-- ================= RETORNO AO PBI ================= -->
+<div class="space-y-3">
+<h3 class="font-semibold text-lg">Selos de Retorno ao PBI</h3>
+<p class="text-gray-600 text-sm">
+Quando ocorre alteração que não evolui para fertilidade.
+Após três dias completos de retorno ao PBI, aplica-se novamente a Regra 2.
+</p>
+</div>
+
+</section>
 
 </main>
-
 </body>
 </html>
