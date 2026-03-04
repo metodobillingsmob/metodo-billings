@@ -72,7 +72,7 @@
 }
 
 .grade-pdf-cell {
-    min-width: 28px;
+    min-width: 36px;
     height: 36px;
     border: 1px solid #e5e7eb;
     text-align: center;
@@ -115,6 +115,16 @@
     line-height: 1;
 }
 
+.vertical-cell span {
+    display: inline-block;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 8px;
+    line-height: 1;
+}
+
+
+
 /* ===============================
    PRINT / PDF — CORREÇÃO DEFINITIVA
 =============================== */
@@ -127,7 +137,7 @@
 
     @page {
         size: A4 landscape;
-        margin: 10mm;
+        margin: 6mm;
     }
 
     body {
@@ -152,7 +162,7 @@
         margin: 0 !important;
         padding: 0 !important;
     }
-
+    
     #view-tabela,
     #tabelas-ciclos {
         display: block !important;
@@ -184,10 +194,11 @@
     .ciclo-print {
         break-inside: avoid;
         page-break-inside: avoid;
+        page-break-after: always;
     }
 
-    .ciclo-print:nth-of-type(2n) {
-        page-break-after: always;
+    .ciclo-print:last-child {
+        page-break-after: auto;
     }
 }
 
@@ -278,7 +289,7 @@
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto p-4">
+    <main class="max-w-7xl mx-auto p-4">
 
         <!-- 1. TELA DE ANOTAÇÃO (NOVA ANOTAÇÃO) -->
         <section id="view-anotar" class="view-content active space-y-6">
@@ -377,7 +388,24 @@
 
         <!-- 4. VISUALIZAÇÃO TABELA -->
         <section id="view-tabela" class="view-content">
+
+            <!-- 🔹 seletor de modo -->
+            <div class="flex gap-2 mb-4">
+
+                <button onclick="modoTabela('resumo')"
+                class="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                Resumo
+                </button>
+
+                <button onclick="modoTabela('clinica')"
+                class="px-3 py-1 bg-gray-200 rounded text-sm">
+                Clínica
+                </button>
+
+            </div>
+
             <div id="tabelas-ciclos" class="space-y-10"></div>
+
         </section>
 
         <!-- 5. VISUALIZAÇÃO GRÁFICO -->
@@ -745,7 +773,15 @@ function changeTab(tabId) {
     if (tabId === 'view-anotar') initSeloPicker();
     if (tabId === 'view-calendario') renderCalendario();
     if (tabId === 'view-lista') renderLista();
-    if (tabId === 'view-tabela') renderTabela();
+        if (tabId === 'view-tabela') {
+
+        if(modoTabelaAtual === "resumo"){
+            renderTabela();
+        } else {
+            renderTabelaClinica();
+        }
+
+    }
     if (tabId === 'view-grafico') renderGrafico();
 }
 
@@ -899,6 +935,21 @@ function renderLista() {
     });
 }
 
+        let modoTabelaAtual = "resumo";
+
+        function modoTabela(modo){
+
+            modoTabelaAtual = modo;
+
+            if(modo === "resumo"){
+                renderTabela();
+            }
+
+            if(modo === "clinica"){
+                renderTabelaClinica();
+            }
+
+        }
 
 function renderTabela() {
     const container = document.getElementById('tabelas-ciclos');
@@ -1025,6 +1076,189 @@ function renderTabela() {
     });
 }
 
+function renderTabelaClinica() {
+
+    const container = document.getElementById('tabelas-ciclos');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (ciclos.length === 0) {
+        container.innerHTML =
+            '<p class="text-gray-400 text-sm">Nenhum ciclo registrado.</p>';
+        return;
+    }
+
+    ciclos.forEach(cicloId => {
+
+        const anotCiclo = anotacoes
+            .filter(a => a.cicloId === cicloId)
+            .sort((a, b) => a.diaCiclo - b.diaCiclo);
+
+        if (anotCiclo.length === 0) return;
+
+        const tipoTexto = formatarTipoCiclo(obterTipoDoCiclo(cicloId));
+
+        const blocos = [];
+        for (let i = 0; i < anotCiclo.length; i += 38) {
+            blocos.push(anotCiclo.slice(i, i + 38));
+        }
+
+        blocos.forEach((bloco, index) => {
+
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-xl border shadow-sm ciclo-print';
+
+            const titulo =
+                index === 0
+                    ? `Ciclo ${cicloId} — ${tipoTexto}`
+                    : `Ciclo ${cicloId} — ${tipoTexto} (continuação)`;
+
+            const inicioDia = index * 38 + 1;
+
+            let html = `
+                <div class="font-bold text-blue-700 mb-2">${titulo}</div>
+                <div class="tabela-wrapper">
+                <table class="tabela-ciclo">
+            `;
+
+            /* =================
+               DIA
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">DIA</td>`;
+            for (let i = 0; i < 38; i++) {
+                html += `<td class="grade-pdf-cell">${inicioDia + i}</td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               DATA
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">DATA</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                const a = bloco[i];
+                let dataFmt = '&nbsp;';
+
+                if (a?.data) {
+                    const d = parseDataLocal(a.data);
+                    dataFmt =
+                        `${String(d.getDate()).padStart(2, '0')}/` +
+                        `${String(d.getMonth() + 1).padStart(2, '0')}`;
+                }
+
+                html += `
+                    <td class="grade-pdf-cell data-cell">
+                        <span>${dataFmt}</span>
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               SELO
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">SELO</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                const a = bloco[i];
+
+                html += `
+                    <td class="grade-pdf-cell ${a ? a.selo.class : ''}">
+                        ${a ? renderConteudoSelo(a.selo) : '&nbsp;'}
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               TEMP
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">TEMP</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                html += `
+                    <td class="grade-pdf-cell">
+                        ${bloco[i]?.temp ?? '&nbsp;'}
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               ATO
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">ATO</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                html += `
+                    <td class="grade-pdf-cell">
+                        ${bloco[i]?.relacao
+                            ? '<i class="fas fa-heart text-red-500"></i>'
+                            : '&nbsp;'}
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               SINTO
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">SINTO</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                html += `
+                    <td class="grade-pdf-cell vertical-cell">
+                        <span>${bloco[i]?.sinto ?? ''}</span>
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               VEJO
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">VEJO</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                html += `
+                    <td class="grade-pdf-cell vertical-cell">
+                        <span>${bloco[i]?.vejo ?? ''}</span>
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               OBS
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">OBS</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                html += `
+                    <td class="grade-pdf-cell text-[8px]">
+                        ${bloco[i]?.obs ?? ''}
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            /* =================
+               REGRA
+            ================= */
+            html += `<tr><td class="grade-pdf-cell col-label">REGRA</td>`;
+            for (let i = 0; i < 38; i++) {
+
+                html += `
+                    <td class="grade-pdf-cell">
+                        ${bloco[i]?.regra ? 'R' + bloco[i].regra : ''}
+                    </td>`;
+            }
+            html += `</tr>`;
+
+            html += `</table></div>`;
+
+            card.innerHTML = html;
+            container.appendChild(card);
+
+        });
+
+    });
+
+}
 
 
 let chart;
@@ -1729,4 +1963,3 @@ installBtn.addEventListener('click', async () => {
 </script>
  </body>
 </html>
-
