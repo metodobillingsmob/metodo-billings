@@ -390,19 +390,21 @@
         <section id="view-tabela" class="view-content">
 
             <!-- 🔹 seletor de modo -->
-            <div class="flex gap-2 mb-4">
+                <div class="flex mb-4 bg-gray-100 p-1 rounded-lg w-fit">
 
-                <button onclick="modoTabela('resumo')"
-                class="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                <button id="btn-resumo"
+                onclick="modoTabela('resumo')"
+                class="px-4 py-1 rounded-md text-sm font-medium bg-blue-600 text-white">
                 Resumo
                 </button>
 
-                <button onclick="modoTabela('clinica')"
-                class="px-3 py-1 bg-gray-200 rounded text-sm">
+                <button id="btn-clinica"
+                onclick="modoTabela('clinica')"
+                class="px-4 py-1 rounded-md text-sm font-medium text-gray-600">
                 Clínica
                 </button>
 
-            </div>
+                </div>
 
             <div id="tabelas-ciclos" class="space-y-10"></div>
 
@@ -937,19 +939,35 @@ function renderLista() {
 
         let modoTabelaAtual = "resumo";
 
-        function modoTabela(modo){
+function modoTabela(modo){
 
-            modoTabelaAtual = modo;
+    modoTabelaAtual = modo;
 
-            if(modo === "resumo"){
-                renderTabela();
-            }
+    const btnResumo = document.getElementById("btn-resumo");
+    const btnClinica = document.getElementById("btn-clinica");
 
-            if(modo === "clinica"){
-                renderTabelaClinica();
-            }
+    if(modo === "resumo"){
 
-        }
+        renderTabela();
+
+        btnResumo.classList.add("bg-blue-600","text-white");
+        btnResumo.classList.remove("text-gray-600");
+
+        btnClinica.classList.remove("bg-blue-600","text-white");
+        btnClinica.classList.add("text-gray-600");
+    }
+
+    if(modo === "clinica"){
+
+        renderTabelaClinica();
+
+        btnClinica.classList.add("bg-blue-600","text-white");
+        btnClinica.classList.remove("text-gray-600");
+
+        btnResumo.classList.remove("bg-blue-600","text-white");
+        btnResumo.classList.add("text-gray-600");
+    }
+}
 
 function renderTabela() {
     const container = document.getElementById('tabelas-ciclos');
