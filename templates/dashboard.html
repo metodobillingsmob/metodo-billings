@@ -2044,8 +2044,9 @@ function abrirModalImagem() {
 
         container.innerHTML = `
             <img 
-                src="/static/imagem/${i}.png"
-                class="w-full aspect-[1/2] object-cover"
+                src="/static/imagem/${i}.png?t=${new Date().getTime()}"
+                loading="eager"
+                class="w-full aspect-[1/2] object-cover img-modal"
                 onerror="this.src='/static/imagem/placeholder.png'"
             >
             <div class="text-center text-[10px] md:text-xs text-gray-500 py-1">
@@ -2055,6 +2056,13 @@ function abrirModalImagem() {
 
         grid.appendChild(container);
     }
+
+    // 🔥 AQUI — depois de criar todas as imagens
+    setTimeout(() => {
+        document.querySelectorAll('.img-modal').forEach(img => {
+            img.src = img.src; // força recarregamento
+        });
+    }, 100);
 }
 
 function fecharModalImagem() {
