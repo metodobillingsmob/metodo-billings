@@ -2038,7 +2038,6 @@ function abrirModalImagem() {
         container.className = `
             border rounded-lg overflow-hidden cursor-pointer 
             hover:shadow-lg transition transform hover:scale-[1.02]
-            w-[170px]
         `;
 
         container.onclick = () => selecionarImagem(i);
@@ -2046,10 +2045,10 @@ function abrirModalImagem() {
         container.innerHTML = `
             <img 
                 src="/static/imagem/${i}.png"
-                class="w-[170px] h-[370px] object-cover"
+                class="w-full aspect-[1/2] object-cover"
                 onerror="this.src='/static/imagem/placeholder.png'"
             >
-            <div class="text-center text-xs text-gray-500 py-1 w-[170px]">
+            <div class="text-center text-[10px] md:text-xs text-gray-500 py-1">
                 Imagem ${i}
             </div>
         `;
@@ -2103,7 +2102,7 @@ function atualizarCampoObs() {
         </div>
 
         <!-- GRID -->
-        <div id="grid-imagens" class="grid grid-cols-3 gap-4 justify-items-center max-h-[70vh] overflow-y-auto">
+        <div id="grid-imagens" class="grid grid-cols-3 gap-1 md:gap-4 max-h-[70vh] overflow-y-auto">
         </div>
 
     </div>
