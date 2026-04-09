@@ -323,8 +323,11 @@
                     <button 
                         onclick="abrirModalImagem()"
                         class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl border text-sm">
-                        📷 Selecionar imagem que mais se aproxima.
+                        📷 Selecione a imagem que se aproxima.
                     </button>
+                        <p id="imagem-selecionada-info" class="text-sm text-gray-500 mt-1 text-right">
+                        Nenhuma imagem selecionada
+                        </p>
 
                         <div>
                             <label class="block text-xs font-bold text-gray-400 mb-2">
@@ -1823,6 +1826,12 @@ function limparForm() {
             btnSalvar.classList.remove('bg-green-600');
             btnSalvar.classList.add('bg-blue-700');
         }
+        imagemSelecionada = null;
+
+        const info = document.getElementById('imagem-selecionada-info');
+        if (info) {
+            info.textContent = "Nenhuma imagem selecionada";
+        }
 }
 
 
@@ -2053,8 +2062,14 @@ function fecharModalImagem() {
     modal.classList.remove('flex');
 }
 
-function selecionarImagem(numero) {
-    imagemSelecionada = numero;
+function selecionarImagem(num) {
+    imagemSelecionada = num;
+
+    const info = document.getElementById('imagem-selecionada-info');
+    if (info) {
+        info.textContent = `Imagem selecionada: Imagem ${num}`;
+    }
+
     fecharModalImagem();
 }
 
