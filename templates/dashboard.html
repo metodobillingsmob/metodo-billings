@@ -319,6 +319,13 @@
                             <option value="">Selecione...</option><option>Pegajoso</option><option>Pastoso</option><option>Cremoso</option><option>Gel</option><option>Clara de ovo</option><option>Sangue</option><option>Mancha</option><option>Nada</option>
                         </select>
                     </div>
+
+                    <button 
+                        onclick="abrirModalImagem()"
+                        class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl border text-sm">
+                        📷 Selecionar imagem que mais se aproxima.
+                    </button>
+
                         <div>
                             <label class="block text-xs font-bold text-gray-400 mb-2">
                                 TIPO DE REGRA
@@ -485,6 +492,8 @@
         let ciclos = [];
         let anotacaoEmEdicaoId = null;
         let cicloAtualTipo = 'normal';
+        let imagemSelecionada = null;
+        
 
         const selosDisponiveis = [
             // 🔴 Sangramento
@@ -695,7 +704,21 @@ async function salvar() {
             btn.textContent = "Salvar no Diário";
             return;
         }
+        let obsTexto = document.getElementById('f-obs').value || '';
 
+            // remove qualquer imagem antiga
+            obsTexto = obsTexto
+                .replace(/\(Imagem\s\d+\)/g, '')
+                .replace(/\(\d+\)/g, '')
+                .replace(/\(Img\s\d+\)/g, '')
+                .trim();
+
+            if (imagemSelecionada) {
+                obsTexto = obsTexto 
+                    ? `${obsTexto} (Img ${imagemSelecionada})`
+                    : `(Img ${imagemSelecionada})`;
+            }
+            
         /* ============================================================
            MONTAGEM DO PAYLOAD (DADOS PARA O PYTHON)
         ============================================================ */
@@ -709,7 +732,7 @@ async function salvar() {
             vejo: document.getElementById('f-vejo').value,
             regra: document.getElementById('f-regra').value || null,
             temp: document.getElementById('f-temp').value || null,
-            obs: document.getElementById('f-obs').value || '',
+            obs: obsTexto,
             selo: seloSelecionado,
             relacao: relacaoAtiva
         };
@@ -1520,11 +1543,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // 🔵 BOTÃO SALVAR
     btn.addEventListener('click', (e) => {
         e.preventDefault();
         console.log("🟢 Clique capturado no botão Salvar");
         salvar();
     });
+
+    // 🟡 CONTROLE DO CAMPO OBS (PROTEGE A IMAGEM)
+    if (campoObs) {
+            // 🔥 só corrige quando sair do campo
+            campoObs.addEventListener('blur', () => {
+                atualizarCampoObs();
+            });
+        }
 });
 
 function iniciarNovoCiclo() {
@@ -1978,6 +2010,86 @@ installBtn.addEventListener('click', async () => {
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
 });
+
+
+function abrirModalImagem() {
+    const modal = document.getElementById('modal-imagens');
+    const grid = document.getElementById('grid-imagens');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    grid.innerHTML = '';
+
+    for (let i = 1; i <= 12; i++) {
+
+        const container = document.createElement('div');
+
+        container.className = `
+            border rounded-lg overflow-hidden cursor-pointer 
+            hover:shadow-lg transition transform hover:scale-[1.02]
+        `;
+
+        container.onclick = () => selecionarImagem(i);
+
+        container.innerHTML = `
+            <img 
+                src="/static/imagem/${i}.png"
+                class="w-full h-[200px] object-cover"
+                onerror="this.src='/static/imagem/placeholder.png'"
+            >
+            <div class="text-center text-xs text-gray-500 py-1">
+                Imagem ${i}
+            </div>
+        `;
+
+        grid.appendChild(container);
+    }
+}
+
+function fecharModalImagem() {
+    const modal = document.getElementById('modal-imagens');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function selecionarImagem(numero) {
+    imagemSelecionada = numero;
+    fecharModalImagem();
+}
+
+function atualizarCampoObs() {
+    const campo = document.getElementById('f-obs');
+
+    let texto = campo.value.replace(/\(Imagem\s\d+\)/g, '').trim();
+
+    if (imagemSelecionada) {
+        // 🔥 garante que SEMPRE volta
+        campo.value = texto 
+            ? `${texto} (Imagem ${imagemSelecionada})` 
+            : `(Imagem ${imagemSelecionada})`;
+    } else {
+        campo.value = texto;
+    }
+}
+
 </script>
+
+<!-- MODAL IMAGENS -->
+<div id="modal-imagens" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+
+    <div class="bg-white rounded-xl p-4 w-[95%] max-w-3xl max-h-[90vh] overflow-y-auto">
+
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-gray-700 text-lg">Selecionar Imagem</h2>
+            <button onclick="fecharModalImagem()" class="text-gray-500 text-xl">✕</button>
+        </div>
+
+        <!-- GRID -->
+        <div id="grid-imagens" class="grid grid-cols-2 gap-4">
+        </div>
+
+    </div>
+</div>
  </body>
 </html>
