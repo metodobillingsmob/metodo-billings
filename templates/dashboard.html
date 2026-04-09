@@ -2044,7 +2044,7 @@ function abrirModalImagem() {
 
         container.innerHTML = `
             <img 
-                src="/static/imagem/${i}.png?t=${new Date().getTime()}"
+                src="/static/imagem/${i}.png"
                 loading="eager"
                 class="w-full aspect-[1/2] object-cover img-modal"
                 onerror="this.src='/static/imagem/placeholder.png'"
@@ -2057,11 +2057,9 @@ function abrirModalImagem() {
         grid.appendChild(container);
     }
 
-    // 🔥 AQUI — depois de criar todas as imagens
+    // 🔥 CHAMA AQUI
     setTimeout(() => {
-        document.querySelectorAll('.img-modal').forEach(img => {
-            img.src = img.src; // força recarregamento
-        });
+        recarregarImagensModal();
     }, 100);
 }
 
@@ -2095,6 +2093,15 @@ function atualizarCampoObs() {
     } else {
         campo.value = texto;
     }
+}
+
+function recarregarImagensModal() {
+    document.querySelectorAll('.img-modal').forEach(img => {
+        const srcOriginal = img.getAttribute('src').split('?')[0];
+
+        // força reload (cache bust)
+        img.src = srcOriginal + '?t=' + new Date().getTime();
+    });
 }
 
 </script>
