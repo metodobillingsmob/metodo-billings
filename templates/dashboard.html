@@ -2031,13 +2031,14 @@ function abrirModalImagem() {
 
     grid.innerHTML = '';
 
-    for (let i = 1; i <= 12; i++) {
+    for (let i = 1; i <= 15; i++) {
 
         const container = document.createElement('div');
 
         container.className = `
             border rounded-lg overflow-hidden cursor-pointer 
             hover:shadow-lg transition transform hover:scale-[1.02]
+            w-[170px]
         `;
 
         container.onclick = () => selecionarImagem(i);
@@ -2045,10 +2046,10 @@ function abrirModalImagem() {
         container.innerHTML = `
             <img 
                 src="/static/imagem/${i}.png"
-                class="w-full h-[200px] object-cover"
+                class="w-[170px] h-[370px] object-cover"
                 onerror="this.src='/static/imagem/placeholder.png'"
             >
-            <div class="text-center text-xs text-gray-500 py-1">
+            <div class="text-center text-xs text-gray-500 py-1 w-[170px]">
                 Imagem ${i}
             </div>
         `;
@@ -2102,7 +2103,7 @@ function atualizarCampoObs() {
         </div>
 
         <!-- GRID -->
-        <div id="grid-imagens" class="grid grid-cols-2 gap-4">
+        <div id="grid-imagens" class="grid grid-cols-3 gap-4 justify-items-center max-h-[70vh] overflow-y-auto">
         </div>
 
     </div>
