@@ -2042,25 +2042,46 @@ function abrirModalImagem() {
 
         container.onclick = () => selecionarImagem(i);
 
+        // 🔥 HTML com loader
         container.innerHTML = `
-            <img 
-                src="/static/imagem/${i}.png"
-                loading="eager"
-                class="w-full aspect-[1/2] object-cover img-modal"
-                onerror="this.src='/static/imagem/placeholder.png'"
-            >
+            <div class="relative w-full aspect-[1/2] bg-gray-100">
+
+                <!-- LOADING -->
+                <div class="absolute inset-0 flex items-center justify-center loader">
+                    <div class="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
+                </div>
+
+                <!-- IMAGEM -->
+                <img 
+                    src="/static/imagem/${i}.png"
+                    class="w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                    loading="lazy"
+                >
+
+            </div>
+
             <div class="text-center text-[10px] md:text-xs text-gray-500 py-1">
                 Imagem ${i}
             </div>
         `;
 
+        // 🔥 CONTROLE INDIVIDUAL
+        const img = container.querySelector("img");
+        const loader = container.querySelector(".loader");
+
+        img.onload = () => {
+            loader.style.display = "none";
+            img.style.opacity = "1";
+        };
+
+        img.onerror = () => {
+            loader.style.display = "none";
+            img.src = "/static/imagem/placeholder.png";
+            img.style.opacity = "1";
+        };
+
         grid.appendChild(container);
     }
-
-    // 🔥 CHAMA AQUI
-    setTimeout(() => {
-        recarregarImagensModal();
-    }, 100);
 }
 
 function fecharModalImagem() {
@@ -2093,15 +2114,6 @@ function atualizarCampoObs() {
     } else {
         campo.value = texto;
     }
-}
-
-function recarregarImagensModal() {
-    document.querySelectorAll('.img-modal').forEach(img => {
-        const srcOriginal = img.getAttribute('src').split('?')[0];
-
-        // força reload (cache bust)
-        img.src = srcOriginal + '?t=' + new Date().getTime();
-    });
 }
 
 </script>
