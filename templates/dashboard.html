@@ -192,8 +192,12 @@
     }
 
     .ciclo-print {
-        break-inside: avoid;
-        page-break-inside: avoid;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    }
+    
+    /* quebra a cada 2 ciclos */
+    .ciclo-print:nth-of-type(2n) {
         page-break-after: always;
     }
 
