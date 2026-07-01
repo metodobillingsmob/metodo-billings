@@ -26,6 +26,146 @@
 
 <main class="max-w-6xl mx-auto p-6">
 
+    <!-- ==========================
+         BACKUP DO SISTEMA
+    =========================== -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+
+        <h2 class="text-lg font-bold text-blue-900 mb-4">
+            Backup do Sistema
+        </h2>
+
+        <div class="flex flex-wrap gap-4">
+
+            <!-- Download -->
+            <a href="/admin/system-backup"
+               class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+
+                <i class="fa-solid fa-download"></i>
+
+                Backup Completo
+            </a>
+
+            <!-- Upload -->
+            <button
+                onclick="document.getElementById('backup-file').click();"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+
+                <i class="fa-solid fa-upload"></i>
+
+                Restaurar Backup
+            </button>
+
+            <input
+                id="backup-file"
+                type="file"
+                accept=".json"
+                class="hidden">
+
+        </div>
+
+        <p class="text-xs text-gray-500 mt-3">
+            O backup completo inclui usuários, administradores e todas as anotações do sistema.
+        </p>
+
+        <hr class="my-6">
+
+        <h3 class="text-lg font-bold text-gray-700 mb-4">
+            Backups Automáticos
+        </h3>
+
+        <table>
+
+            {% if backups %}
+
+            <div class="overflow-x-auto">
+
+            <table class="w-full text-sm">
+
+                <thead class="bg-gray-100">
+
+                    <tr>
+
+                        <th class="p-3 text-left">Arquivo</th>
+
+                        <th class="p-3 text-center">Data</th>
+
+                        <th class="p-3 text-center">Tamanho</th>
+
+                        <th class="p-3 text-center">Ações</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for backup in backups %}
+
+                <tr class="border-b">
+
+                    <td class="p-3">
+
+                        {{ backup.nome }}
+
+                    </td>
+
+                    <td class="text-center">
+
+                        {{ backup.data }}
+
+                    </td>
+
+                    <td class="text-center">
+
+                        {{ backup.tamanho }} KB
+
+                    </td>
+
+                    <td class="text-center">
+
+                        <a
+                            href="/admin/download-backup/{{ backup.nome }}"
+                            class="text-green-600 hover:text-green-800 mr-4">
+
+                            <i class="fa-solid fa-download"></i>
+
+                        </a>
+
+                        <a
+                            href="/admin/delete-backup/{{ backup.nome }}"
+                            onclick="return confirm('Excluir este backup?')"
+                            class="text-red-600 hover:text-red-800">
+
+                            <i class="fa-solid fa-trash"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            </div>
+
+            {% else %}
+
+            <p class="text-gray-500 text-sm">
+
+            Nenhum backup automático encontrado.
+
+            </p>
+
+            {% endif %}
+        </p>
+
+    </div>
+
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
         <table class="w-full text-sm">
@@ -99,13 +239,324 @@
 
 </main>
 
-<!-- Service Worker -->
+<!-- ==========================================================
+     MODAL DO SISTEMA
+========================================================== -->
+<div
+    id="modalSistema"
+    class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+    <div
+        class="bg-white rounded-2xl shadow-2xl w-[430px] max-w-[92%] overflow-hidden animate-fade">
+
+        <!-- Cabeçalho -->
+        <div class="px-6 pt-6 pb-4 text-center">
+
+            <i
+                id="modalIcone"
+                class="fa-solid fa-circle-question text-yellow-500 text-6xl mb-4">
+            </i>
+
+            <h2
+                id="modalTitulo"
+                class="text-2xl font-bold text-gray-800 mt-3">
+            </h2>
+
+        </div>
+
+        <hr>
+
+        <!-- Conteúdo -->
+        <div class="px-6 py-5">
+
+            <p
+                id="modalMensagem"
+                class="text-gray-600 text-center leading-7 whitespace-pre-line">
+            </p>
+
+        </div>
+
+        <!-- Botões -->
+        <div
+            id="modalBotoes"
+            class="flex justify-center gap-4 px-6 pb-6">
+        </div>
+
+    </div>
+
+</div>
+
 <script>
+
+function abrirModal({
+    icone = "fa-solid fa-circle-question text-yellow-500 text-6xl",
+    titulo = "",
+    mensagem = "",
+    botoes = []
+}) {
+
+    const modal = document.getElementById("modalSistema");
+
+    const iconeModal = document.getElementById("modalIcone");
+
+    iconeModal.className = icone;
+
+    document.getElementById("modalTitulo").textContent = titulo;
+
+    document.getElementById("modalMensagem").textContent = mensagem;
+
+    const botoesDiv = document.getElementById("modalBotoes");
+
+    botoesDiv.innerHTML = "";
+
+    botoes.forEach(botao => {
+
+        const button = document.createElement("button");
+
+        button.textContent = botao.texto;
+
+        button.className =
+            "min-w-[120px] px-5 py-2.5 rounded-xl font-semibold transition " +
+            botao.className;
+
+        button.onclick = botao.onclick;
+
+        botoesDiv.appendChild(button);
+
+    });
+
+    modal.classList.remove("hidden");
+
+    modal.classList.add("flex");
+
+}
+
+function fecharModal() {
+
+    const modal = document.getElementById("modalSistema");
+
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+
+}
+
+document.getElementById("backup-file").addEventListener("change", async function () {
+
+    if (!this.files.length)
+        return;
+
+    const arquivo = this.files[0];
+
+    const confirmar = await new Promise(resolve => {
+
+        abrirModal({
+
+            icone: "fa-solid fa-triangle-exclamation text-yellow-500 text-5xl",
+
+            titulo: "Restaurar Backup",
+
+            mensagem:
+`Todos os dados atuais serão substituídos pelo conteúdo deste backup.
+
+Esta operação não poderá ser desfeita.
+
+Deseja continuar?`,
+
+            botoes: [
+
+                {
+
+                    texto: "Cancelar",
+
+                    className:
+                        "px-5 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition font-semibold",
+
+                    onclick: () => {
+
+                        fecharModal();
+
+                        resolve(false);
+
+                    }
+
+                },
+
+                {
+
+                    texto: "Restaurar",
+
+                    className:
+                        "px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition font-semibold",
+
+                    onclick: () => {
+
+                        fecharModal();
+
+                        resolve(true);
+
+                    }
+
+                }
+
+            ]
+
+        });
+
+    });
+
+    if (!confirmar) {
+
+        this.value = "";
+
+        return;
+
+    }
+
+    const formData = new FormData();
+
+    formData.append("file", arquivo);
+
+    abrirModal({
+
+        icone: "fa-solid fa-spinner fa-spin text-blue-600 text-5xl",
+
+        titulo: "Restaurando Backup",
+
+        mensagem:
+`Por favor aguarde...
+
+Não feche esta página.`,
+
+        loading: false,
+
+        botoes: []
+
+    });
+
+    try {
+
+        const resposta = await fetch("/admin/system-restore", {
+
+            method: "POST",
+
+            body: formData
+
+        });
+
+        const json = await resposta.json();
+
+        if (json.success) {
+
+            abrirModal({
+
+                icone: "fa-solid fa-circle-check text-green-600 text-5xl",
+
+                titulo: "Backup Restaurado",
+
+                mensagem:
+`Backup restaurado com sucesso.
+
+Você será redirecionado para a tela de login.`,
+
+                botoes: [
+
+                    {
+
+                        texto: "OK",
+
+                        className:
+                            "px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition font-semibold",
+
+                        onclick: () => {
+
+                            window.location.href = json.redirect;
+
+                        }
+
+                    }
+
+                ]
+
+            });
+
+        } else {
+
+            abrirModal({
+
+                icone: "fa-solid fa-circle-xmark text-red-600 text-5xl",
+
+                titulo: "Erro",
+
+                mensagem: json.message,
+
+                botoes: [
+
+                    {
+
+                        texto: "Fechar",
+
+                        className:
+                            "px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition font-semibold",
+
+                        onclick: fecharModal
+
+                    }
+
+                ]
+
+            });
+
+        }
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        abrirModal({
+
+            icone: "fa-solid fa-circle-xmark text-red-600 text-5xl",
+
+            titulo: "Erro",
+
+            mensagem:
+"Erro ao restaurar o backup.",
+
+            botoes: [
+
+                {
+
+                    texto: "Fechar",
+
+                    className:
+                        "px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition font-semibold",
+
+                    onclick: fecharModal
+
+                }
+
+            ]
+
+        });
+
+    }
+
+    this.value = "";
+
+});
+
+// ======================
+// Service Worker
+// ======================
+
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}')
+
+    navigator.serviceWorker
+        .register('{{ url_for("static", filename="sw.js") }}')
         .then(() => console.log('Service Worker registrado'))
         .catch(err => console.log('Erro no SW:', err));
+
 }
+
 </script>
 
 </body>
