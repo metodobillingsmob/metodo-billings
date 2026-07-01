@@ -1,13 +1,16 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Note
 import json
 import config
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+from pathlib import Path
+from datetime import datetime
 import os
 
 app = Flask(__name__)
+MAX_BACKUPS = 20
 app.config.from_object(config.Config)
 db.init_app(app)
 if os.environ.get("RENDER") != "true":
@@ -227,15 +230,336 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+import hashlib
+
+
+def gerar_backup():
+
+    # ==========================
+    # Usuários
+    # ==========================
+
+    users = User.query.order_by(User.id).all()
+
+    users_json = []
+
+    for u in users:
+
+        users_json.append({
+
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "whatsapp": u.whatsapp,
+            "password": u.password,
+            "is_admin": u.is_admin
+
+        })
+
+    # ==========================
+    # Anotações
+    # ==========================
+
+    notes = Note.query.order_by(Note.id).all()
+
+    notes_json = []
+
+    for n in notes:
+
+        notes_json.append({
+
+            "id": n.id,
+            "user_id": n.user_id,
+
+            "cicloId": n.cicloId,
+            "diaCiclo": n.diaCiclo,
+            "tipoCiclo": n.tipoCiclo,
+
+            "data": n.date,
+
+            "sinto": n.feeling,
+            "vejo": n.appearance,
+
+            "regra": n.regra,
+            "temp": n.temp,
+            "relacao": n.relacao,
+            "obs": n.obs,
+
+            "selo": json.loads(n.selo_json) if n.selo_json else None
+
+        })
+
+    dados = {
+
+        "users": users_json,
+        "notes": notes_json
+
+    }
+
+    # checksum somente dos dados
+    checksum = hashlib.sha256(
+
+        json.dumps(
+            dados,
+            sort_keys=True,
+            ensure_ascii=False
+        ).encode("utf-8")
+
+    ).hexdigest()
+
+    backup = {
+
+        "sistema": "MOB",
+
+        "versao_backup": "1.0",
+
+        "exportado_em": datetime.now().isoformat(),
+
+        "quantidade": {
+
+            "users": len(users_json),
+            "notes": len(notes_json)
+
+        },
+
+        "checksum": checksum,
+
+        "dados": dados
+
+    }
+
+    return backup
+
+def salvar_backup_automatico():
+
+    backup = gerar_backup()
+
+    pasta = Path(app.instance_path) / "backups"
+
+    pasta.mkdir(parents=True, exist_ok=True)
+
+
+    nome = f"backup-auto-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+
+    caminho = pasta / nome
+
+    with open(caminho, "w", encoding="utf-8") as arquivo:
+
+        json.dump(
+            backup,
+            arquivo,
+            indent=4,
+            ensure_ascii=False
+        )
+
+    # Mantém somente os últimos backups
+    limpar_backups_antigos()
+
+    return caminho
+
+def listar_backups():
+
+    pasta = Path(app.instance_path) / "backups"
+
+    pasta.mkdir(parents=True, exist_ok=True)
+
+    backups = []
+
+    for arquivo in pasta.glob("*.json"):
+
+        stat = arquivo.stat()
+
+        timestamp = stat.st_mtime
+
+        backups.append({
+
+            "nome": arquivo.name,
+
+            "tamanho": round(stat.st_size / 1024, 2),
+
+            "timestamp": timestamp,
+
+            "data": datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y %H:%M:%S")
+
+        })
+
+    backups.sort(
+        key=lambda x: x["timestamp"],
+        reverse=True
+    )
+
+    return backups
+
+def limpar_backups_antigos():
+
+    pasta = Path(app.instance_path) / "backups"
+
+    pasta.mkdir(parents=True, exist_ok=True)
+
+    arquivos = list(pasta.glob("*.json"))
+
+    arquivos.sort(
+        key=lambda x: x.stat().st_mtime,
+        reverse=True
+    )
+
+    # Mantém apenas os mais recentes
+    for arquivo in arquivos[MAX_BACKUPS:]:
+        try:
+            arquivo.unlink()
+        except Exception as e:
+            print(f"Erro ao excluir backup antigo: {e}")
+
 @app.route('/admin')
 @login_required
 @admin_required
 def admin_panel():
+
     users = User.query.all()
-    return render_template('admin.html', users=users)
+
+    backups = listar_backups()
+
+    return render_template(
+        'admin.html',
+        users=users,
+        backups=backups
+    )
 
 from flask import Response
 import json
+
+@app.route('/admin/system-restore', methods=['POST'])
+@login_required
+@admin_required
+def system_restore():
+
+    if 'file' not in request.files:
+        return jsonify({
+            "success": False,
+            "message": "Nenhum arquivo enviado."
+        }), 400
+
+    arquivo = request.files['file']
+
+    try:
+        backup = json.load(arquivo)
+    except Exception:
+        return jsonify({
+            "success": False,
+            "message": "Arquivo JSON inválido."
+        }), 400
+
+    # ==========================
+    # Validação do Backup
+    # ==========================
+
+    if backup.get("sistema") != "MOB":
+        return jsonify({
+            "success": False,
+            "message": "Este arquivo não pertence ao MOB."
+        }), 400
+
+    dados = backup.get("dados")
+
+    if dados is None:
+        return jsonify({
+            "success": False,
+            "message": "Estrutura do backup inválida."
+        }), 400
+
+    usuarios = dados.get("users", [])
+    anotacoes = dados.get("notes", [])
+    salvar_backup_automatico()
+    try:
+
+        # limpa qualquer transação pendente
+        db.session.rollback()
+
+        # ==========================
+        # Remove dados atuais
+        # ==========================
+
+        Note.query.delete()
+        User.query.delete()
+
+        db.session.commit()
+
+        # ==========================
+        # Restaura usuários
+        # ==========================
+
+        for u in usuarios:
+
+            usuario = User()
+
+            usuario.id = u["id"]
+            usuario.name = u["name"]
+            usuario.email = u["email"]
+            usuario.password = u["password"]     # hash original
+            usuario.whatsapp = u["whatsapp"]
+            usuario.is_admin = u["is_admin"]
+
+            db.session.add(usuario)
+
+        db.session.commit()
+
+        # ==========================
+        # Restaura anotações
+        # ==========================
+
+        for n in anotacoes:
+
+            nota = Note()
+
+            nota.id = n["id"]
+            nota.user_id = n["user_id"]
+
+            nota.cicloId = n["cicloId"]
+            nota.diaCiclo = n["diaCiclo"]
+            nota.tipoCiclo = n["tipoCiclo"]
+
+            nota.date = n["data"]
+
+            nota.feeling = n["sinto"]
+            nota.appearance = n["vejo"]
+
+            nota.regra = n["regra"]
+            nota.temp = n["temp"]
+            nota.relacao = n["relacao"]
+            nota.obs = n["obs"]
+
+            nota.selo_json = json.dumps(
+                n["selo"],
+                ensure_ascii=False
+            )
+
+            db.session.add(nota)
+
+        db.session.commit()
+
+        # ==========================
+        # Reinicia a sessão
+        # ==========================
+
+        db.session.remove()
+
+        logout_user()
+        session.clear()
+
+        return jsonify({
+            "success": True,
+            "redirect": url_for("login"),
+            "message": "Backup restaurado com sucesso."
+        })
+
+    except Exception as e:
+
+        db.session.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
 @app.route('/admin/export/<int:user_id>')
 @login_required
@@ -261,6 +585,63 @@ def export_user(user_id):
     response.headers["Content-Disposition"] = f"attachment; filename=backup_user_{user.id}.json"
 
     return response
+
+
+@app.route('/admin/system-backup')
+@login_required
+@admin_required
+def system_backup():
+
+    backup = gerar_backup()
+
+    response = Response(
+
+        json.dumps(
+            backup,
+            indent=4,
+            ensure_ascii=False
+        ),
+
+        mimetype="application/json"
+
+    )
+
+    response.headers["Content-Disposition"] = (
+        f'attachment; filename=backup-completo-{datetime.now().strftime("%Y%m%d-%H%M%S")}.json'
+    )
+
+    return response
+
+@app.route('/admin/download-backup/<nome>')
+@login_required
+@admin_required
+def download_backup(nome):
+
+    pasta = Path(app.instance_path) / "backups"
+
+    caminho = pasta / nome
+
+    if not caminho.exists():
+        return "Arquivo não encontrado.", 404
+
+    return send_file(
+        caminho,
+        as_attachment=True
+    )
+
+@app.route('/admin/delete-backup/<nome>')
+@login_required
+@admin_required
+def delete_backup(nome):
+
+    pasta = Path(app.instance_path) / "backups"
+
+    caminho = pasta / nome
+
+    if caminho.exists():
+        caminho.unlink()
+
+    return redirect(url_for("admin_panel"))
 
 @app.route('/admin/delete/<int:user_id>')
 @login_required
@@ -433,7 +814,6 @@ def manual():
 
 
 if __name__ == '__main__':
-    import os
 
     with app.app_context():
         db.create_all()
